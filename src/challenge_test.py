@@ -1,0 +1,61 @@
+# Python
+from MainBoard import MainBoard
+from src.config import *
+from src.shared import gameDisplay, SCORES
+
+
+class Challenge_No_Rows(MainBoard):
+    def __init__(self, starting_level, score, pieces_to_place):
+        super().__init__(starting_level, score)
+        self.pieces_to_place = pieces_to_place
+        self.score_per_piece = 100  # Points awarded for placing a piece
+        self.line_cleared = False
+        self.updateSpeed()
+
+
+    def checkAndApplyGameOver(self):
+        # Lose condition: A row is completely filled
+        if self.line_cleared:
+            self.gameStatus = 'gameOver'
+            return
+
+        # Default behavior for game over
+        if self.piece.gameOverCondition == True:
+            self.gameStatus = 'gameOver'
+            for i in range(0, 4):
+                if self.piece.blocks[i].currentPos.row >= 0 and self.piece.blocks[i].currentPos.col >= 0:
+                    self.blockMat[self.piece.blocks[i].currentPos.row][
+                        self.piece.blocks[i].currentPos.col] = self.piece.type
+
+    def updateScores(self):
+
+        clearedLinesNum = 0
+        self.pieces_to_place -= 1
+        for i in range(0, 4):
+            if self.clearedLines[i] > -1:
+                clearedLinesNum += 1
+                self.line_cleared = True
+
+
+        self.score = self.score + self.score_per_piece
+        if self.score > 999999:
+            self.score = 999999
+
+        if self.pieces_to_place <= 0:
+            self.level += 1
+
+    def draw_score_content(self, xPosRef, yLastBlock):
+        scoreText = fontSB.render('score:', False, TEXT_COLOR)
+        gameDisplay.blit(scoreText, (xPosRef + self.blockSize, yLastBlock - 12 * self.blockSize))
+        scoreNumText = fontSB.render(str(self.score), False, NUM_COLOR)
+        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, yLastBlock - 10 * self.blockSize))
+
+        levelText = fontSB.render('level:', False, TEXT_COLOR)
+        gameDisplay.blit(levelText, (xPosRef + self.blockSize, yLastBlock - 8 * self.blockSize))
+        levelNumText = fontSB.render(str(self.level), False, NUM_COLOR)
+        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, yLastBlock - 6 * self.blockSize))
+
+        linesText = fontSB.render('blocks:', False, TEXT_COLOR)
+        gameDisplay.blit(linesText, (xPosRef + self.blockSize, yLastBlock - 4 * self.blockSize))
+        linesNumText = fontSB.render(str(self.pieces_to_place), False, NUM_COLOR)
+        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, yLastBlock - 2 * self.blockSize))
