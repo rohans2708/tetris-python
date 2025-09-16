@@ -12,6 +12,7 @@ from challenge_spin import Challenge_Spin
 import os
 
 from src.challenge_rotation_limit import Challenge_Rotation_Limit
+from src.challenge_rising_flood import Challenge_Rising_Flood
 from src.upgrades import load_upgrades, save_upgrades
 
 
@@ -237,8 +238,21 @@ if __name__ == '__main__':
                 continue
             challenge_done_screen_rotation_limit()
 
+            # Challenge: Rising Flood (Garbage-Rush)
+            flood_interval = 12
+            challenge_explanation_screen_rising_flood(flood_interval)
+            current_board = Challenge_Rising_Flood(
+                12,
+                current_board.score,
+                flood_interval_seconds=flood_interval,
+                upgrades=upgrades_data,
+            )
+            if gameLoop(name=name, target_level=15, mainBoard=current_board):
+                continue
+            challenge_done_screen_rising_flood()
+
             # Wieder zurück zum Basisspiel (bis Level 50)
-            current_board = MainBoard(12, current_board.score, upgrades=upgrades_data)
+            current_board = MainBoard(15, current_board.score, upgrades=upgrades_data)
             if gameLoop(name=name, target_level=50, mainBoard=current_board):
                 continue
             break

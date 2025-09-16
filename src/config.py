@@ -38,13 +38,15 @@ NUM_COLOR = WHITE
 TEXT_COLOR = GRAY
 
 blockColors = {
-'I' : (19,232,232), #CYAN
-'O' : (236,236,14), #YELLOW
-'T' : (126,5,126), #PURPLE
-'S' : (0,128,0), #GREEN
-'Z' : (236,14,14), #RED
-'J' : (30,30,201), #BLUE
-'L' : (240,110,2) } #ORANGE
+    'I': (19, 232, 232),  # CYAN
+    'O': (236, 236, 14),  # YELLOW
+    'T': (126, 5, 126),  # PURPLE
+    'S': (0, 128, 0),  # GREEN
+    'Z': (236, 14, 14),  # RED
+    'J': (30, 30, 201),  # BLUE
+    'L': (240, 110, 2),  # ORANGE
+    'garbage': (90, 90, 90),
+}
 
 #Initial(spawn) block definitons of each piece
 pieceDefs = {

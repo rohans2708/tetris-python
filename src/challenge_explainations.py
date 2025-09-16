@@ -141,6 +141,62 @@ def challenge_done_screen_rotation_limit():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 waiting = False
 
+
+def challenge_explanation_screen_rising_flood(interval_seconds: float) -> None:
+    """Intro screen for the Rising Flood (Garbage-Rush) challenge."""
+    pygame.display.get_surface().fill(BLACK)
+
+    title = fontTitle.render("Challenge: Rising Flood", True, WHITE)
+    _center(title, DISPLAY_HEIGHT // 5)
+
+    interval_text = int(round(interval_seconds))
+    lines = [
+        f"Alle {interval_text} Sekunden drückt eine Müllreihe das Feld nach oben.",
+        "Sie lässt nur ein zufälliges Loch frei.",
+        "Ist die oberste Reihe schon belegt, bedeutet die Flut Game Over.",
+        "Rechts findest du Countdown und Anzahl der Flutreihen.",
+        "Drücke ENTER, um zu starten.",
+    ]
+
+    y = DISPLAY_HEIGHT // 3
+    for txt in lines:
+        surf = fontSmall.render(txt, True, WHITE)
+        _center(surf, y)
+        y += 40
+
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                waiting = False
+
+
+def challenge_done_screen_rising_flood() -> None:
+    """Simple completion screen after surviving the Rising Flood challenge."""
+    pygame.display.get_surface().fill(BLACK)
+
+    title = fontTitle.render("Rising Flood geschafft!", True, WHITE)
+    _center(title, DISPLAY_HEIGHT // 2 - 30)
+
+    hint = fontSmall.render("Drücke ENTER, um weiterzumachen.", True, WHITE)
+    _center(hint, DISPLAY_HEIGHT // 2 + 30)
+
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                waiting = False
+
 def challenge_done_screen():
     # Clear the screen
     gameDisplay.fill(BLACK)
