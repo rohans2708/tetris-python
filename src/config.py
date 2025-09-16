@@ -8,6 +8,8 @@ DISPLAY_WIDTH = 800
 DISPLAY_HEIGHT = 600
 
 pieceNames = ('I', 'O', 'T', 'S', 'Z', 'J', 'L')
+# Special piece that can be triggered via upgrade (not part of normal random bag)
+BOMB_PIECE_NAME = 'BOMB'
 
 STARTING_SPEED = 48
 SPEED_MULTIPLIER = 0.9
@@ -45,6 +47,7 @@ blockColors = {
     'Z': (236, 14, 14),  # RED
     'J': (30, 30, 201),  # BLUE
     'L': (240, 110, 2),  # ORANGE
+    BOMB_PIECE_NAME: (200, 30, 30),  # BASE COLOR FOR BOMB (BLINKS IN-GAME)
     'garbage': (90, 90, 90),
 }
 
@@ -56,7 +59,8 @@ pieceDefs = {
 'S' : ((0,1),(0,2),(1,0),(1,1)),
 'Z' : ((0,0),(0,1),(1,1),(1,2)),
 'J' : ((0,0),(1,0),(1,1),(1,2)),
-'L' : ((0,2),(1,0),(1,1),(1,2)) }
+'L' : ((0,2),(1,0),(1,1),(1,2)),
+BOMB_PIECE_NAME : ((0,1),(0,2),(1,1),(1,2)) }
 
 directions = {
 'down' : (1,0),

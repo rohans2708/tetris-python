@@ -106,7 +106,7 @@ class MovingPiece:
 
     def rotate(self, rotationType):
 
-        if self.type != 'O':
+        if self.type not in ('O', BOMB_PIECE_NAME):
             tempBlocks = [[0] * 2 for i in range(4)]
             origin = self.findOrigin()
 
