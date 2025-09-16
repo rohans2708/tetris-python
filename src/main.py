@@ -59,6 +59,10 @@ def gameLoop(name, target_level, mainBoard):
                     if key.hardDrop.status == 'idle':
                         key.hardDrop.trig = True
                         key.hardDrop.status = 'pressed'
+                if event.key == pygame.K_b:
+                    if key.bomb.status == 'idle':
+                        key.bomb.trig = True
+                        key.bomb.status = 'pressed'
 
             if event.type == pygame.KEYUP:  # Keyboard keys release events
                 if event.key == pygame.K_LEFT:
@@ -79,6 +83,8 @@ def gameLoop(name, target_level, mainBoard):
                     key.enter.status = 'idle'
                 if event.key == pygame.K_SPACE:
                     key.hardDrop.status = 'idle'
+                if event.key == pygame.K_b:
+                    key.bomb.status = 'idle'
 
             if xChange > 0:
                 key.xNav.status = 'right'
@@ -199,18 +205,9 @@ if __name__ == '__main__':
         while True:
             current_board = MainBoard(STARTING_LEVEL, score= 0, upgrades=upgrades_data)
 
-            # Challenge: Rising Flood (Garbage-Rush)
-            flood_interval = 12
-            challenge_explanation_screen_rising_flood(flood_interval)
-            current_board = Challenge_Rising_Flood(
-                12,
-                current_board.score,
-                flood_interval_seconds=flood_interval,
-                upgrades=upgrades_data,
-            )
             if gameLoop(name=name, target_level=15, mainBoard=current_board):
                 continue
-            challenge_done_screen_rising_flood()
+
             #current_board = Challenge_Upside_Down(0, score=0, upgrades=upgrades_data)
             # Spiel bis Level 3 (exklusiv)
             if gameLoop(name=name, target_level=3, mainBoard=current_board):

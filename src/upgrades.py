@@ -17,6 +17,7 @@ DEFAULT_DATA: Dict[str, Any] = {
     "score_multiplier": 1,
     "hard_drop": 0,
     "meta_currency": 0,
+    "bomb_block": 0,
 }
 
 # Pfad zu upgrades.json im Projekt-Root

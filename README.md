@@ -44,6 +44,8 @@ R -> Restart
 
 P -> Pause/Unpause
 
+B -> Bombe auslösen (nach Freischaltung)
+
 ## Screenshots
 
 <img src="Screenshots/tetris_initScreen.png" width="400">
