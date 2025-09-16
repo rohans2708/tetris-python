@@ -205,22 +205,9 @@ if __name__ == '__main__':
         while True:
             current_board = MainBoard(STARTING_LEVEL, score= 0, upgrades=upgrades_data)
 
-            # Challenge: Rising Flood (Garbage-Rush)
-            flood_interval = 12
-            challenge_explanation_screen_rising_flood(flood_interval)
-            current_board = Challenge_Rising_Flood(
-                12,
-                current_board.score,
-                flood_interval_seconds=flood_interval,
-                upgrades=upgrades_data,
-            )
             if gameLoop(name=name, target_level=15, mainBoard=current_board):
                 continue
-            challenge_done_screen_rising_flood()
 
-            if upgrades_data.get("bomb_block", 0) == 0:
-                challenge_done_screen_bomb_unlock()
-                upgrades_data["bomb_block"] = 1
             #current_board = Challenge_Upside_Down(0, score=0, upgrades=upgrades_data)
             # Spiel bis Level 3 (exklusiv)
             if gameLoop(name=name, target_level=3, mainBoard=current_board):

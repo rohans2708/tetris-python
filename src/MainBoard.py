@@ -318,18 +318,18 @@ class MainBoard:
                 unpauseText = fontSmall.render('P -> unpause', False, self.whiteSineAnimation())
                 gameDisplay.blit(unpauseText, (xPosRef + 1 * self.blockSize, yLastBlock - 15 * self.blockSize))
 
-            if self.bomb_unlocked:
+            if self.upgrades_data.get("bomb_block", 0) > 0:
                 if self.piece.type == BOMB_PIECE_NAME:
                     bomb_text = 'Bombe aktiv!'
                     bomb_color = self.redBlinkAnimation()
                 elif self.bomb_queued:
-                    bomb_text = 'Bombe eingeplant'
+                    bomb_text = 'Bombe'
                     bomb_color = self.redBlinkAnimation()
                 elif self.bomb_available:
-                    bomb_text = 'B -> Bombe bereit'
+                    bomb_text = f'B -> Bombe {self.upgrades_data.get("bomb_block", 0)}x'
                     bomb_color = self.redBlinkAnimation()
                 else:
-                    bomb_text = 'Bombe verbraucht'
+                    bomb_text = ''
                     bomb_color = GRAY
 
                 bombText = fontSmall.render(bomb_text, False, bomb_color)
@@ -452,8 +452,9 @@ class MainBoard:
         for block in self.piece.blocks:
             row = block.currentPos.row
             col = block.currentPos.col
-            for d_row in (-1, 0, 1):
-                for d_col in (-1, 0, 1):
+            radius = 2
+            for d_row in (-radius, 0, radius):
+                for d_col in (-radius, 0, radius):
                     target_row = row + d_row
                     target_col = col + d_col
                     if 0 <= target_row < self.rowNum and 0 <= target_col < self.colNum:
@@ -471,13 +472,13 @@ class MainBoard:
 
     def queue_bomb(self) -> bool:
         """Ersetzt den nächsten Stein durch eine Bombe, falls verfügbar."""
-        if not self.bomb_unlocked or not self.bomb_available or self.bomb_queued:
+        if self.upgrades_data.get("bomb_block", 0) == 0 or self.bomb_queued:
             return False
         if self.piece.type == BOMB_PIECE_NAME or self.nextPieces[1] == BOMB_PIECE_NAME:
             return False
 
         self.nextPieces[1] = BOMB_PIECE_NAME
-        self.bomb_available = False
+        self.upgrades_data["bomb_block"] = max(0, self.upgrades_data.get("bomb_block", 1) - 1)
         self.bomb_queued = True
         return True
 
