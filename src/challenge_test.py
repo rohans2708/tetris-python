@@ -5,10 +5,11 @@ from src.shared import gameDisplay, SCORES
 
 
 class Challenge_No_Rows(MainBoard):
-    def __init__(self, starting_level, score, pieces_to_place):
-        super().__init__(starting_level, score)
+    def __init__(self, starting_level, score, pieces_to_place, upgrades=None):
+        # upgrades-Dict an MainBoard übergeben
+        super().__init__(starting_level, score, upgrades=upgrades)
         self.pieces_to_place = pieces_to_place
-        self.score_per_piece = 100  # Points awarded for placing a piece
+        self.score_per_piece = 100
         self.line_cleared = False
         self.updateSpeed()
 

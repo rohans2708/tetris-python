@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from MovingPiece import MovingPiece
 from config import *
@@ -6,7 +8,7 @@ from shared import gameClock, gameDisplay, key, rng, SCORES
 
 class MainBoard:
 
-    def __init__(self, starting_level, score = 0, ghost_block = False):
+    def __init__(self, starting_level, score=0, upgrades: dict | None = None):
 
         # Size and position initiations
         self.blockSize = blockSize
@@ -37,9 +39,38 @@ class MainBoard:
 
         self.playerName = ""
         self.inputActive = False
-        self.ghost_block = ghost_block
+        self.ghost_block = bool(upgrades["ghost_piece"])
+
+        # Upgrades speichern (falls übergeben)
+        self.upgrades_data = upgrades
 
         self.updateSpeed()
+        self.relapse_keys()
+
+    def perform_hard_drop(self):
+        """
+        Setzt das aktuelle Piece sofort auf die Ghost-Position und markiert es
+        als 'collided', damit es noch im selben Frame gelockt und gewertet wird.
+        """
+        if self.piece.status != 'moving':
+            return
+        try:
+            ghost_rows = self.piece.calculateGhostPosition()
+            for i in range(4):
+                # nur die Zeile auf die Ghost-Zeile setzen; Spalte bleibt
+                self.piece.blocks[i].currentPos.row = ghost_rows[i]
+            self.piece.status = 'collided'
+        except Exception:
+            # Falls irgendwas schiefgeht: ignoriere Hard-Drop
+            pass
+
+    def relapse_keys(self):
+            key.down.trig = False
+            key.down.status = 'released'
+            key.cRotate.trig = False
+            key.cRotate.status = 'released'
+            key.rotate.trig = False
+            key.rotate.status = 'released'
 
     def setPlayerName(self, name):
         self.playerName = name
@@ -391,20 +422,44 @@ class MainBoard:
             if self.clearedLines[i] > -1:
                 clearedLinesNum = clearedLinesNum + 1
 
-        self.score = self.score + (self.level + 1) * baseLinePoints[clearedLinesNum] + self.piece.dropScore
+        self.score = self.score + ((self.level + 1) * baseLinePoints[clearedLinesNum] + self.piece.dropScore) * self.upgrades_data["score_multiplier"]
         if self.score > 999999:
             self.score = 999999
         self.lines = self.lines + clearedLinesNum
         level_up_score = 0
         for i in range(0, self.level + 1):
             level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
-        if self.score > level_up_score:
+        while self.score > level_up_score:
             self.level = self.level + 1
+            level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** self.level)
         if self.level > 99:
             self.level = 99
 
     def updateSpeed(self):
-        gameClock.fall = gameClock.TimingType(STARTING_SPEED * (SPEED_MULTIPLIER ** self.level))
+        """
+        Aktualisiert die Fallgeschwindigkeit des Spielsteins basierend auf dem Level
+        und berücksichtigt das Upgrade 'smoother_gravity' (verlangsamt Schwerkraft).
+        """
+        base_speed = STARTING_SPEED * (SPEED_MULTIPLIER ** self.level)
+        if hasattr(self, "upgrades_data") and self.upgrades_data:
+            try:
+                upgrade_level = int(self.upgrades_data.get("unlocked", {}).get("smoother_gravity", 0))
+            except Exception:
+                upgrade_level = 0
+            if upgrade_level > 0:
+                base_speed *= (1.0 + 0.1 * upgrade_level - 0.05 * self.upgrades_data["smoother_gravity"])
+        gameClock.fall = gameClock.TimingType(base_speed)
+
+    def get_upgrade_level(self, key: str) -> int:
+        """
+        Liefert die Stufe des Upgrades `key` aus dem gespeicherten Upgrade-Dictionary.
+        """
+        if not hasattr(self, "upgrades_data") or not self.upgrades_data:
+            return 0
+        try:
+            return int(self.upgrades_data.get("unlocked", {}).get(key, 0))
+        except Exception:
+            return 0
 
     def saveHighscore(self):
         # die zeile von dem player finden, falls es sie schon gibt
@@ -459,6 +514,10 @@ class MainBoard:
                             self.piece.rotate('cCW')
                             key.cRotate.trig = False
 
+                        if key.hardDrop.trig == True and bool(self.upgrades_data["hard_drop"]):
+                            self.perform_hard_drop()
+                            key.hardDrop.trig = False
+
                     elif self.piece.status == 'collided':
                         if self.lineClearStatus == 'idle':
                             for i in range(0, 4):
@@ -487,12 +546,15 @@ class MainBoard:
 
     def rotate_CC(self):
         if key.rotate.trig == True:
-            self.piece.rotate('CW')
+            self.rotate('CW')
             key.rotate.trig = False
+
+    def rotate(self, direction):
+        self.piece.rotate(direction)
 
     def rotate_cCC(self):
         if key.cRotate.trig == True:
-            self.piece.rotate('cCW')
+            self.rotate('cCW')
             key.cRotate.trig = False
 
     def check_game_over(self):

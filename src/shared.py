@@ -8,7 +8,7 @@ import pandas as pd
 pygame.init()
 pygame.font.init()
 
-gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT) , pygame.FULLSCREEN)
+gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT)) #, pygame.FULLSCREEN)
 gameClock = GameClock()
 key = GameKeyInput()
 

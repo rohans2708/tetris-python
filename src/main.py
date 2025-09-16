@@ -7,8 +7,13 @@ from challenge_explainations import *
 from shared import gameDisplay, gameClock, key, SCORES
 from MainBoard import MainBoard
 from challenge_test import Challenge_No_Rows
+from challenge_upside_down import Challenge_Upside_Down
 from challenge_spin import Challenge_Spin
 import os
+
+from src.challenge_rotation_limit import Challenge_Rotation_Limit
+from src.upgrades import load_upgrades, save_upgrades
+
 
 def gameLoop(name, target_level, mainBoard):
     clock = pygame.time.Clock()
@@ -49,6 +54,10 @@ def gameLoop(name, target_level, mainBoard):
                         key.restart.status = 'pressed'
                 if event.key == pygame.K_RETURN:
                     key.enter.status = 'pressed'
+                if event.key == pygame.K_SPACE:
+                    if key.hardDrop.status == 'idle':
+                        key.hardDrop.trig = True
+                        key.hardDrop.status = 'pressed'
 
             if event.type == pygame.KEYUP:  # Keyboard keys release events
                 if event.key == pygame.K_LEFT:
@@ -67,6 +76,8 @@ def gameLoop(name, target_level, mainBoard):
                     key.restart.status = 'idle'
                 if event.key == pygame.K_RETURN:
                     key.enter.status = 'idle'
+                if event.key == pygame.K_SPACE:
+                    key.hardDrop.status = 'idle'
 
             if xChange > 0:
                 key.xNav.status = 'right'
@@ -173,46 +184,73 @@ def confirm_existing_name(name):
 
 
 if __name__ == '__main__':
-
     try:
         pygame.display.set_caption('Tetris')
-
         name = startup_login_screen()
-        current_board = MainBoard(STARTING_LEVEL)
+        #name = "robin"
 
-        # upgrades
+        # Upgrades laden
+        upgrades_data = load_upgrades(name)
+
+        # Start-Board ohne Ghost-Piece
         ghost_block = False
 
-
         while True:
+            current_board = MainBoard(STARTING_LEVEL, score= 0, upgrades=upgrades_data)
+            #current_board = Challenge_Upside_Down(0, score=0, upgrades=upgrades_data)
+            # Spiel bis Level 3 (exklusiv)
             if gameLoop(name=name, target_level=3, mainBoard=current_board):
-                continue     # Start the game loop
-            challenge_explanation_screen_no_rows()
-            current_board = Challenge_No_Rows(4, current_board.score, 20)  # Initialize the challenge board
-            if gameLoop(name=name, target_level=5, mainBoard=current_board):  # Start the challenge loop
                 continue
-            ghost_block = True
-            challenge_done_screen_no_rows()
 
-            current_board = MainBoard(5, current_board.score, ghost_block)  # Reset to main board after challenge
+            # Challenge: Keine Reihen dürfen voll werden
+            challenge_explanation_screen_no_rows()
+            current_board = Challenge_No_Rows(4, current_board.score, 20, upgrades=upgrades_data)
+            if gameLoop(name=name, target_level=5, mainBoard=current_board):
+                continue
+            if upgrades_data["ghost_piece"] == 0:
+                challenge_done_screen_no_rows()
+                upgrades_data["ghost_piece"] = 1  # Ghost-Piece freischalten
+            else:
+                challenge_done_screen()
+
+            # Basisspiel weiterführen, Ghost aktiv
+            current_board = MainBoard(5, current_board.score, upgrades=upgrades_data)
             if gameLoop(name=name, target_level=8, mainBoard=current_board):
                 continue
-            current_board = Challenge_Spin(8, current_board.score, rotate_delay=30, ghost_piece=ghost_block)
+
+            # Challenge: Spin-Challenge (autom. Rotation)
+            current_board = Challenge_Spin(8, current_board.score, rotate_delay=30, upgrades=upgrades_data)
             if gameLoop(name=name, target_level=10, mainBoard=current_board):
                 continue
-            current_board = MainBoard(10, current_board.score, ghost_block)  # Reset to main board after challenge
+
+            # Challenge: Rotationslimit-Challenge
+            extra_rot = 0
+            try:
+                extra_rot = int(upgrades_data.get("unlocked", {}).get("rotation_buffer", 0))
+            except Exception:
+                extra_rot = 0
+
+            base_rotations = 2
+            challenge_explanation_screen_rotation_limit(base_rotations, extra_rot)
+            current_board = Challenge_Rotation_Limit(10, current_board.score, base_rotations=2, upgrades=upgrades_data)
+            if gameLoop(name=name, target_level=12, mainBoard=current_board):
+                continue
+            challenge_done_screen_rotation_limit()
+
+            # Wieder zurück zum Basisspiel (bis Level 50)
+            current_board = MainBoard(12, current_board.score, upgrades=upgrades_data)
             if gameLoop(name=name, target_level=50, mainBoard=current_board):
                 continue
             break
-
-
     except Exception as e:
+        # Fehler-Handling
         print("An error occurred:", e)
         print("Exiting the game...")
     finally:
-        # save the high scores to the CSV file before exiting
+        # Highscores sichern und Spiel beenden
+        # write the upgrades in the dataframe SCORES
+        save_upgrades(name, upgrades_data)
         SCORES.to_csv(HIGHSCORES_FILE, index=False, header=True)
-        print("High scores saved to", HIGHSCORES_FILE)
         pygame.quit()
         sys.exit()
 
