@@ -11,7 +11,7 @@ from __future__ import annotations
 import math
 
 from MainBoard import MainBoard
-from src.config import fontSB, TEXT_COLOR, NUM_COLOR
+from src.config import fontSB, TEXT_COLOR, NUM_COLOR, LEVEL_SCORE, LEVEL_SCORE_MULTIPLIER
 from src.shared import gameDisplay, rng
 
 
@@ -120,7 +120,7 @@ class Challenge_Rising_Flood(MainBoard):
         levelNumText = fontSB.render(str(self.level), False, NUM_COLOR)
         gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, yLastBlock - 6 * self.blockSize))
 
-        floodText = fontSB.render('flood in:', False, TEXT_COLOR)
+        floodText = fontSB.render('flood:', False, TEXT_COLOR)
         gameDisplay.blit(floodText, (xPosRef + self.blockSize, yLastBlock - 4 * self.blockSize))
         seconds_left = max(
             0,
@@ -129,7 +129,11 @@ class Challenge_Rising_Flood(MainBoard):
         floodValue = fontSB.render(f'{seconds_left}s', False, NUM_COLOR)
         gameDisplay.blit(floodValue, (xPosRef + self.blockSize, yLastBlock - 3 * self.blockSize))
 
-        raisedText = fontSB.render('rows risen:', False, TEXT_COLOR)
-        gameDisplay.blit(raisedText, (xPosRef + self.blockSize, yLastBlock - 2 * self.blockSize))
-        raisedValue = fontSB.render(str(self.flood_rows_added), False, NUM_COLOR)
-        gameDisplay.blit(raisedValue, (xPosRef + self.blockSize, yLastBlock - 1 * self.blockSize))
+        level_up_score = 0
+        for i in range(0, self.level + 1):
+            level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
+        level_up_score -= self.score
+        linesText = fontSB.render('level Up:', False, TEXT_COLOR)
+        gameDisplay.blit(linesText, (xPosRef + self.blockSize, yLastBlock - 2 * self.blockSize))
+        linesNumText = fontSB.render(str(int(level_up_score)), False, NUM_COLOR)
+        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, yLastBlock - 1 * self.blockSize))
