@@ -59,6 +59,10 @@ def gameLoop(name, target_level, mainBoard):
                     if key.hardDrop.status == 'idle':
                         key.hardDrop.trig = True
                         key.hardDrop.status = 'pressed'
+                if event.key == pygame.K_b:
+                    if key.bomb.status == 'idle':
+                        key.bomb.trig = True
+                        key.bomb.status = 'pressed'
                 if event.key == pygame.K_h:
                     if key.hold.status == 'idle':
                         key.hold.trig = True
@@ -83,6 +87,8 @@ def gameLoop(name, target_level, mainBoard):
                     key.enter.status = 'idle'
                 if event.key == pygame.K_SPACE:
                     key.hardDrop.status = 'idle'
+                if event.key == pygame.K_b:
+                    key.bomb.status = 'idle'
                 if event.key == pygame.K_h:
                     key.hold.status = 'idle'
 
@@ -217,7 +223,6 @@ if __name__ == '__main__':
             if upgrades_data["ghost_piece"] == 0:
                 challenge_done_screen_no_rows()
                 upgrades_data["ghost_piece"] = 1  # Ghost-Piece freischalten
-                upgrades_data.setdefault("unlocked", {})["ghost_piece"] = 1
             else:
                 challenge_done_screen()
 

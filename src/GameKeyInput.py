@@ -10,6 +10,7 @@ class GameKeyInput:
         self.restart = self.KeyName('idle', False)  # 'pressed' //KEY R
         self.hardDrop = self.KeyName('idle', False)  # NEU: //KEY SPACE
         self.hold = self.KeyName('idle', False)  # KEY H
+        self.bomb = self.KeyName('idle', False)  # NEU: //KEY B
 
     class KeyName:
 

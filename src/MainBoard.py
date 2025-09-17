@@ -81,6 +81,14 @@ class MainBoard:
         key.cRotate.status = 'released'
         key.rotate.trig = False
         key.rotate.status = 'released'
+        key.bomb.trig = False
+        key.bomb.status = 'released'
+        key.down.trig = False
+        key.down.status = 'released'
+        key.cRotate.trig = False
+        key.cRotate.status = 'released'
+        key.rotate.trig = False
+        key.rotate.status = 'released'
         if hasattr(key, "hold"):
             key.hold.trig = False
             key.hold.status = 'idle'
@@ -141,6 +149,11 @@ class MainBoard:
         self.gameStatus = 'running'
         self.gamePause = False
 
+        self.bomb_available = self.bomb_unlocked
+        self.bomb_queued = False
+
+        # self.score = 0
+        # self.level = STARTING_LEVEL
         self.lines = 0
 
         gameClock.restart(self.level)
@@ -225,8 +238,16 @@ class MainBoard:
                         self.draw_BLOCK(self.xPos, self.yPos, ghostPositions[i], self.piece.blocks[i].currentPos.col,
                                         LIGHT_GRAY)
                 for i in range(4):
-                    self.draw_BLOCK(self.xPos, self.yPos, self.piece.blocks[i].currentPos.row,
-                                    self.piece.blocks[i].currentPos.col, blockColors[self.piece.type])
+                    color = blockColors.get(self.piece.type, WHITE)
+                    if self.piece.type == BOMB_PIECE_NAME:
+                        color = self.redBlinkAnimation()
+                    self.draw_BLOCK(
+                        self.xPos,
+                        self.yPos,
+                        self.piece.blocks[i].currentPos.row,
+                        self.piece.blocks[i].currentPos.col,
+                        color,
+                    )
 
             # Draw grid lines
             for row in range(self.rowNum + 1):
@@ -448,6 +469,24 @@ class MainBoard:
                 size = block_size
 
             self.draw_piece_preview(piece_type, inner_preview, size)
+            if self.upgrades_data.get("bomb_block", 0) > 0:
+                if self.piece.type == BOMB_PIECE_NAME:
+                    bomb_text = 'Bombe aktiv!'
+                    bomb_color = self.redBlinkAnimation()
+                elif self.bomb_queued:
+                    bomb_text = 'Bombe'
+                    bomb_color = self.redBlinkAnimation()
+                elif self.bomb_available:
+                    bomb_text = f'B -> Bombe {self.upgrades_data.get("bomb_block", 0)}x'
+                    bomb_color = self.redBlinkAnimation()
+                else:
+                    bomb_text = ''
+                    bomb_color = GRAY
+
+                bombText = fontSmall.render(bomb_text, False, bomb_color)
+                gameDisplay.blit(bombText, (xPosRef + 1 * self.blockSize, yLastBlock - 14 * self.blockSize))
+
+        else:
 
             current_y = preview_rect.bottom + preview_gap
 
@@ -538,6 +577,12 @@ class MainBoard:
         sineEffect = [sine, sine, sine]
         return sineEffect
 
+    def redBlinkAnimation(self):
+
+        sine = math.floor(150 + 105 * math.fabs(math.sin(2 * math.pi * (gameClock.frameTick / (SINE_ANI_PERIOD)))))
+        sine = max(0, min(255, sine))
+        return (sine, 30, 30)
+
     def lineClearAnimation(self):
 
         clearAniStage = math.floor((gameClock.frameTick - gameClock.clearAniStart) / CLEAR_ANI_PERIOD)
@@ -585,6 +630,24 @@ class MainBoard:
 
         return clearedLines
 
+    def handle_bomb_explosion(self):
+        """Entfernt Blöcke rund um die Bombe und bereitet den nächsten Spawn vor."""
+        for block in self.piece.blocks:
+            row = block.currentPos.row
+            col = block.currentPos.col
+            radius = 2
+            for d_row in (-radius, 0, radius):
+                for d_col in (-radius, 0, radius):
+                    target_row = row + d_row
+                    target_col = col + d_col
+                    if 0 <= target_row < self.rowNum and 0 <= target_col < self.colNum:
+                        self.blockMat[target_row][target_col] = 'empty'
+
+        self.clearedLines = [-1, -1, -1, -1]
+        self.bomb_queued = False
+        self.piece.dropScore = 0
+        self.prepareNextSpawn()
+
     def prepareNextSpawn(self):
         self.spawn_piece_from_queue()
         self.lineClearStatus = 'idle'
@@ -601,6 +664,22 @@ class MainBoard:
             self.hold_used_this_piece = False
         self.num_pieces += 1
         self.on_piece_spawned(from_hold=from_hold)
+    def queue_bomb(self) -> bool:
+        """Ersetzt den nächsten Stein durch eine Bombe, falls verfügbar."""
+        if self.upgrades_data.get("bomb_block", 0) == 0 or self.bomb_queued:
+            return False
+        if self.piece.type == BOMB_PIECE_NAME or self.nextPieces[1] == BOMB_PIECE_NAME:
+            return False
+
+        self.nextPieces[1] = BOMB_PIECE_NAME
+        self.upgrades_data["bomb_block"] = max(0, self.upgrades_data.get("bomb_block", 1) - 1)
+        self.bomb_queued = True
+        return True
+
+    def generateNextTwoPieces(self):
+        self.nextPieces[0] = pieceNames[rng.randint(0, 6)]
+        self.nextPieces[1] = pieceNames[rng.randint(0, 6)]
+        self.piece.type = self.nextPieces[0]
 
     def spawn_piece_from_queue(self, *, reset_hold_flag: bool = True, from_hold: bool = False) -> None:
         self.refill_next_queue()
@@ -633,6 +712,12 @@ class MainBoard:
     def on_piece_spawned(self, from_hold: bool = False) -> None:
         """Hook für Subklassen, wenn ein neues Piece gespawnt wurde."""
         return
+    def generateNextPiece(self):
+        self.nextPieces[0] = self.nextPieces[1]
+        self.nextPieces[1] = pieceNames[rng.randint(0, 6)]
+        self.piece.type = self.nextPieces[0]
+        if self.piece.type == BOMB_PIECE_NAME:
+            self.bomb_queued = False
 
     def checkAndApplyGameOver(self):
         if self.piece.gameOverCondition == True:
@@ -652,7 +737,14 @@ class MainBoard:
             if self.clearedLines[i] > -1:
                 clearedLinesNum = clearedLinesNum + 1
 
-        self.score = self.score + ((self.level + 1) * baseLinePoints[clearedLinesNum] + self.piece.dropScore) * self.upgrades_data["score_multiplier"]
+        multiplier = 1
+        if self.upgrades_data:
+            try:
+                multiplier = self.upgrades_data.get("score_multiplier", 1)
+            except AttributeError:
+                multiplier = 1
+
+        self.score = self.score + ((self.level + 1) * baseLinePoints[clearedLinesNum] + self.piece.dropScore) * multiplier
         if self.score > 999999:
             self.score = 999999
         self.lines = self.lines + clearedLinesNum
@@ -736,6 +828,10 @@ class MainBoard:
                     key.pause.trig = False
 
                 if self.gameStatus != 'gameOver':
+                    if key.bomb.trig:
+                        self.queue_bomb()
+                        key.bomb.trig = False
+
                     if self.piece.status == 'moving':
                         if hasattr(key, "hold") and key.hold.trig:
                             self.perform_hold()
@@ -747,7 +843,7 @@ class MainBoard:
                             self.piece.rotate('cCW')
                             key.cRotate.trig = False
 
-                        if key.hardDrop.trig == True and bool(self.upgrades_data["hard_drop"]):
+                        if key.hardDrop.trig == True and bool(self.upgrades_data.get("hard_drop", 0)):
                             self.perform_hard_drop()
                             key.hardDrop.trig = False
 
@@ -755,13 +851,16 @@ class MainBoard:
                         if hasattr(key, "hold") and key.hold.trig:
                             key.hold.trig = False
                         if self.lineClearStatus == 'idle':
-                            for i in range(0, 4):
-                                self.blockMat[self.piece.blocks[i].currentPos.row][
-                                    self.piece.blocks[i].currentPos.col] = self.piece.type
-                            self.clearedLines = self.getCompleteLines()
-                            self.updateScores()
-                            self.saveHighscore()
-                            self.updateSpeed()
+                            if self.piece.type == BOMB_PIECE_NAME:
+                                self.handle_bomb_explosion()
+                            else:
+                                for i in range(0, 4):
+                                    self.blockMat[self.piece.blocks[i].currentPos.row][
+                                        self.piece.blocks[i].currentPos.col] = self.piece.type
+                                self.clearedLines = self.getCompleteLines()
+                                self.updateScores()
+                                self.saveHighscore()
+                                self.updateSpeed()
                         elif self.lineClearStatus == 'clearRunning':
                             self.lineClearAnimation()
                         else:  # 'clearFin'
@@ -773,6 +872,8 @@ class MainBoard:
                     gameClock.unpause()
                     self.gamePause = False
                     key.pause.trig = False
+                if key.bomb.trig:
+                    key.bomb.trig = False
 
         else:  # 'gameOver'
             if key.enter.status == 'pressed':
