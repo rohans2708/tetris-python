@@ -8,6 +8,8 @@ from shared import gameClock, gameDisplay, key, rng, SCORES
 
 class MainBoard:
 
+    SCORE_PANEL_BLOCKS = 10
+
     def __init__(self, starting_level, score=0, upgrades: dict | None = None):
 
         # Size and position initiations
@@ -30,7 +32,7 @@ class MainBoard:
 
         self.gameStatus = 'firstStart'  # 'running' 'gameOver'
         self.gamePause = False
-        self.nextPieces = ['I', 'I']
+        self.nextPieces: list[str] = []
 
         self.score = score
         self.level = starting_level
@@ -39,10 +41,18 @@ class MainBoard:
 
         self.playerName = ""
         self.inputActive = False
-        self.ghost_block = bool(upgrades["ghost_piece"])
 
-        # Upgrades speichern (falls übergeben)
-        self.upgrades_data = upgrades
+        self.upgrades_data: dict = upgrades or {}
+        self._ensure_upgrade_defaults()
+
+        self.ghost_block = bool(self.upgrades_data.get("ghost_piece", 0))
+
+        # Upgrade-abhängige Features
+        self.preview_extra = max(0, self.get_upgrade_level("preview_plus"))
+        self.preview_count = 1 + self.preview_extra
+        self.hold_unlocked = bool(self.get_upgrade_level("hold_unlocked"))
+        self.hold_piece: str | None = None
+        self.hold_used_this_piece = False
 
         self.updateSpeed()
         self.relapse_keys()
@@ -65,29 +75,72 @@ class MainBoard:
             pass
 
     def relapse_keys(self):
-            key.down.trig = False
-            key.down.status = 'released'
-            key.cRotate.trig = False
-            key.cRotate.status = 'released'
-            key.rotate.trig = False
-            key.rotate.status = 'released'
+        key.down.trig = False
+        key.down.status = 'released'
+        key.cRotate.trig = False
+        key.cRotate.status = 'released'
+        key.rotate.trig = False
+        key.rotate.status = 'released'
+        if hasattr(key, "hold"):
+            key.hold.trig = False
+            key.hold.status = 'idle'
+
+    def _ensure_upgrade_defaults(self) -> None:
+        if self.upgrades_data is None:
+            self.upgrades_data = {}
+
+        unlocked_defaults = {
+            "rotation_buffer": 0,
+            "ghost_piece": 0,
+            "smoother_gravity": 0,
+            "score_multiplier": 1,
+            "hard_drop": 0,
+            "preview_plus": 0,
+            "hold_unlocked": 0,
+        }
+
+        unlocked = self.upgrades_data.setdefault("unlocked", {})
+        for key_name, default_value in unlocked_defaults.items():
+            raw_value = unlocked.get(key_name, self.upgrades_data.get(key_name, default_value))
+            try:
+                value = int(raw_value)
+            except Exception:
+                value = default_value
+            unlocked[key_name] = value
+            self.upgrades_data.setdefault(key_name, value)
+
+        try:
+            meta_currency = int(self.upgrades_data.get("meta_currency", 0))
+        except Exception:
+            meta_currency = 0
+        self.upgrades_data["meta_currency"] = meta_currency
 
     def setPlayerName(self, name):
         self.playerName = name
     def restart(self):
         self.blockMat = [['empty'] * self.colNum for i in range(self.rowNum)]
 
-        self.piece = MovingPiece(self.colNum, self.rowNum, 'uncreated')
-
         self.lineClearStatus = 'idle'
         self.clearedLines = [-1, -1, -1, -1]
         gameClock.fall.preFrame = gameClock.frameTick
-        self.generateNextTwoPieces()
+        self._ensure_upgrade_defaults()
+
+        self.preview_extra = max(0, self.get_upgrade_level("preview_plus"))
+        self.preview_count = max(1, 1 + self.preview_extra)
+        self.hold_unlocked = bool(self.get_upgrade_level("hold_unlocked"))
+        self.ghost_block = bool(self.get_upgrade_level("ghost_piece") or self.upgrades_data.get("ghost_piece", 0))
+
+        self.hold_piece = None
+        self.hold_used_this_piece = False
+        self.num_pieces = 0
+
+        self.nextPieces.clear()
+        self.refill_next_queue()
+        self.spawn_piece_from_queue()
+
         self.gameStatus = 'running'
         self.gamePause = False
 
-        # self.score = 0
-        # self.level = STARTING_LEVEL
         self.lines = 0
 
         gameClock.restart(self.level)
@@ -217,116 +270,259 @@ class MainBoard:
         pygame.draw.rect(gameDisplay, BORDER_COLOR,
                          [xStart, yEnd, self.scoreBoardWidth + self.boardLineWidth, self.boardLineWidth], 0)
 
+    def _score_panel_height(self) -> int:
+        return int(self.blockSize * self.SCORE_PANEL_BLOCKS)
+
+    def _score_panel_top(self, yLastBlock: int) -> int:
+        return int(yLastBlock - self._score_panel_height())
+
+    def _score_line_positions(self, yLastBlock: int, line_count: int) -> list[int]:
+        panel_top = self._score_panel_top(yLastBlock)
+        panel_height = self._score_panel_height()
+        if line_count <= 1:
+            return [panel_top + panel_height // 2]
+
+        available_height = panel_height - self.blockSize
+        spacing = available_height / (line_count - 1)
+        start = panel_top + self.blockSize * 0.5
+        return [int(start + spacing * i) for i in range(line_count)]
+
     def draw_SCOREBOARD_CONTENT(self):
 
         xPosRef = self.xPos + (self.blockSize * self.colNum) + self.boardLineWidth + self.blockLineWidth
         yPosRef = self.yPos
         yLastBlock = self.yPos + (self.blockSize * self.rowNum)
+        score_panel_top = self._score_panel_top(yLastBlock)
 
-        # Highscores laden
-        if self.gameStatus == 'gameOver' or self.gameStatus == 'firstStart' or True:
-            verschiebung = 200
-            highscoreText = fontSB.render('Highscores:', False, TEXT_COLOR)
-            gameDisplay.blit(highscoreText, (xPosRef + verschiebung, yPosRef))
+        # Highscores laden (außerhalb des Scoreboards platziert)
+        verschiebung = 200
+        highscoreText = fontSB.render('Highscores:', False, TEXT_COLOR)
+        gameDisplay.blit(highscoreText, (xPosRef + verschiebung, yPosRef))
 
-            # Get the top 5 scores
-            top_scores = SCORES.nlargest(10, 'Score')
-            # check if the player name exists in the scores
-            player_in_top_10 = False
-            if self.playerName in top_scores['Name'].values:
-                player_in_top_10 = True
-            if self.playerName in SCORES['Name'].values:
-                top_scores = SCORES.nlargest(9, 'Score')
-            # Render top 5 scores
-            for i, (name, score, level) in enumerate(top_scores.itertuples(index=False, name=None)):
-                if name == self.playerName:
-                    scoreText = fontSB.render(f"{i + 1}. YOU: {score} (Level: {level})", False, ORANGE)
-                else:
-                    scoreText = fontSB.render(f"{i + 1}. {name}: {score} (Level: {level})", False, NUM_COLOR)
-                gameDisplay.blit(scoreText, (xPosRef + verschiebung, yPosRef + (i + 1) * 2 * self.blockSize))
+        top_scores = SCORES.nlargest(10, 'Score')
+        player_in_top_10 = self.playerName in top_scores['Name'].values
+        if self.playerName in SCORES['Name'].values:
+            top_scores = SCORES.nlargest(9, 'Score')
 
-            # Render player's score if it exists
-            player_row = SCORES[SCORES['Name'] == self.playerName]
-            if not player_row.empty and not player_in_top_10:
-                player_score = player_row.iloc[0]['Score']
-                player_level = player_row.iloc[0]['Level']
-                # find the position of the player of all the players according to the score
-                player_position = SCORES[SCORES['Score'] >= player_score].shape[0]
-                scoreText = fontSB.render(f"{player_position}. YOU: {player_score} (Level: {player_level})", False, ORANGE)
-                gameDisplay.blit(scoreText, (xPosRef + verschiebung, yPosRef + 10 * 2 * self.blockSize))
+        for i, (name, score, level) in enumerate(top_scores.itertuples(index=False, name=None)):
+            if name == self.playerName:
+                scoreText = fontSB.render(f"{i + 1}. YOU: {score} (Level: {level})", False, ORANGE)
+            else:
+                scoreText = fontSB.render(f"{i + 1}. {name}: {score} (Level: {level})", False, NUM_COLOR)
+            gameDisplay.blit(scoreText, (xPosRef + verschiebung, yPosRef + (i + 1) * 2 * self.blockSize))
 
+        player_row = SCORES[SCORES['Name'] == self.playerName]
+        if not player_row.empty and not player_in_top_10:
+            player_score = player_row.iloc[0]['Score']
+            player_level = player_row.iloc[0]['Level']
+            player_position = SCORES[SCORES['Score'] >= player_score].shape[0]
+            scoreText = fontSB.render(f"{player_position}. YOU: {player_score} (Level: {player_level})", False, ORANGE)
+            gameDisplay.blit(scoreText, (xPosRef + verschiebung, yPosRef + 10 * 2 * self.blockSize))
 
         if self.gameStatus == 'running':
-            nextPieceText = fontSB.render('next:', False, TEXT_COLOR)
-            gameDisplay.blit(nextPieceText, (xPosRef + self.blockSize, self.yPos))
-
-            blocks = [[0, 0], [0, 0], [0, 0], [0, 0]]
-            origin = [0, 0]
-            for i in range(0, 4):
-                blocks[i][ROW] = origin[ROW] + pieceDefs[self.nextPieces[1]][i][ROW]
-                blocks[i][COL] = origin[COL] + pieceDefs[self.nextPieces[1]][i][COL]
-
-                if self.nextPieces[1] == 'O':
-                    self.draw_BLOCK(xPosRef + 0.5 * self.blockSize, yPosRef + 2.25 * self.blockSize, blocks[i][ROW],
-                                    blocks[i][COL], blockColors[self.nextPieces[1]])
-                elif self.nextPieces[1] == 'I':
-                    self.draw_BLOCK(xPosRef + 0.5 * self.blockSize, yPosRef + 1.65 * self.blockSize, blocks[i][ROW],
-                                    blocks[i][COL], blockColors[self.nextPieces[1]])
-                else:
-                    self.draw_BLOCK(xPosRef + 1 * self.blockSize, yPosRef + 2.25 * self.blockSize, blocks[i][ROW],
-                                    blocks[i][COL], blockColors[self.nextPieces[1]])
-
-            if self.gamePause == False:
-                pauseText = fontSmall.render('P -> pause', False, WHITE)
-                gameDisplay.blit(pauseText, (xPosRef + 1 * self.blockSize, yLastBlock - 15 * self.blockSize))
-            else:
-                unpauseText = fontSmall.render('P -> unpause', False, self.whiteSineAnimation())
-                gameDisplay.blit(unpauseText, (xPosRef + 1 * self.blockSize, yLastBlock - 15 * self.blockSize))
-
+            self.draw_hold_and_next(xPosRef, yPosRef, score_panel_top)
+            self.draw_pause_hint(xPosRef, score_panel_top)
         else:
-
-            yBlockRef = 0.3
-            text0 = fontSB.render('press', False, self.whiteSineAnimation())
-            gameDisplay.blit(text0, (xPosRef + self.blockSize, self.yPos + yBlockRef * self.blockSize))
-            text1 = fontSB.render('enter', False, self.whiteSineAnimation())
-            gameDisplay.blit(text1, (xPosRef + self.blockSize, self.yPos + (yBlockRef + 1.5) * self.blockSize))
-            text2 = fontSB.render('to', False, self.whiteSineAnimation())
-            gameDisplay.blit(text2, (xPosRef + self.blockSize, self.yPos + (yBlockRef + 3) * self.blockSize))
-            if self.gameStatus == 'firstStart':
-                text3 = fontSB.render('start', False, self.whiteSineAnimation())
-                gameDisplay.blit(text3, (xPosRef + self.blockSize, self.yPos + (yBlockRef + 4.5) * self.blockSize))
-            else:
-                text3 = fontSB.render('restart', False, self.whiteSineAnimation())
-                gameDisplay.blit(text3, (xPosRef + self.blockSize, self.yPos + (yBlockRef + 4.5) * self.blockSize))
+            self.draw_start_prompt(xPosRef, yPosRef)
 
         pygame.draw.rect(gameDisplay, BORDER_COLOR,
-                         [xPosRef, yLastBlock - 12.5 * self.blockSize, self.scoreBoardWidth, self.boardLineWidth], 0)
+                         [xPosRef, score_panel_top - self.boardLineWidth, self.scoreBoardWidth, self.boardLineWidth], 0)
         # Draw the score content
         self.draw_score_content(xPosRef, yLastBlock)
+
+    def draw_hold_and_next(self, xPosRef: int, yPosRef: int, score_panel_top: int) -> None:
+        available_height = score_panel_top - yPosRef
+        if available_height <= 0:
+            return
+
+        # Upgrades können während der Kampagne freigeschaltet werden
+        self.preview_extra = max(0, self.get_upgrade_level("preview_plus"))
+        self.preview_count = max(1, 1 + self.preview_extra)
+        self.hold_unlocked = bool(self.get_upgrade_level("hold_unlocked"))
+
+        self.refill_next_queue()
+
+        label_font = fontSmall
+        label_height = label_font.get_height()
+        top_margin = max(6, int(self.blockSize * 0.3))
+        section_gap = max(6, int(self.blockSize * 0.2))
+        preview_gap = max(4, int(self.blockSize * 0.1))
+
+        hold_message_lines: list[str] = []
+
+        message_height = 0
+        if hold_message_lines:
+            message_height = len(hold_message_lines) * label_height + (len(hold_message_lines) - 1) * 2
+
+        box_count = self.preview_count + 1
+        total_label_height = label_height * 2
+        total_gap = section_gap + preview_gap * max(0, self.preview_count - 1)
+        available_for_boxes = available_height - top_margin - total_label_height - total_gap - message_height
+        if available_for_boxes <= 0:
+            available_for_boxes = (self.preview_count + 1) * 16
+
+        block_size = 0
+        if box_count > 0:
+            block_size = available_for_boxes // (box_count * 4)
+        block_size = max(3, min(self.blockSize, block_size))
+        while block_size > 3 and block_size * 4 * box_count > available_for_boxes:
+            block_size -= 1
+        if block_size < 3:
+            block_size = 3
+        preview_box_size = block_size * 4
+
+        center_x = int(xPosRef + self.scoreBoardWidth / 2)
+        current_y = yPosRef + top_margin
+
+        hold_label = label_font.render('HOLD', False, TEXT_COLOR)
+        hold_label_rect = hold_label.get_rect()
+        hold_rect = pygame.Rect(0, 0, preview_box_size, preview_box_size)
+
+        if self.hold_unlocked:
+            hold_label_rect.centerx = center_x
+            hold_label_rect.top = current_y
+            gameDisplay.blit(hold_label, hold_label_rect)
+
+            current_y = hold_label_rect.bottom + 2
+
+            hold_rect.centerx = center_x
+            hold_rect.top = current_y
+            pygame.draw.rect(gameDisplay, BORDER_COLOR, hold_rect, 1)
+
+            inner_hold = hold_rect.inflate(-2, -2)
+            if inner_hold.width <= 0 or inner_hold.height <= 0:
+                inner_hold = hold_rect.copy()
+
+        if not self.hold_unlocked:
+            test = 0
+        else:
+            pygame.draw.rect(gameDisplay, BLACK, inner_hold)
+            if self.hold_piece is None:
+                placeholder = label_font.render('—', False, TEXT_COLOR)
+                placeholder_rect = placeholder.get_rect(center=inner_hold.center)
+                gameDisplay.blit(placeholder, placeholder_rect)
+            else:
+                self.draw_piece_preview(self.hold_piece, inner_hold, block_size)
+
+        current_y = hold_rect.bottom + 2
+
+        for line in hold_message_lines:
+            msg_surface = label_font.render(line, False, LIGHT_GRAY)
+            msg_rect = msg_surface.get_rect()
+            msg_rect.centerx = center_x
+            msg_rect.top = current_y
+            gameDisplay.blit(msg_surface, msg_rect)
+            current_y = msg_rect.bottom + 2
+
+        current_y += section_gap
+
+        current_y = max(current_y, 84)
+
+        next_label = label_font.render('NEXT', False, TEXT_COLOR)
+        next_label_rect = next_label.get_rect()
+        next_label_rect.centerx = center_x
+        next_label_rect.top = current_y
+        gameDisplay.blit(next_label, next_label_rect)
+
+        current_y = next_label_rect.bottom + 2
+
+        self.refill_next_queue()
+        for piece_type in self.nextPieces[:self.preview_count]:
+            if self.hold_unlocked:
+                size = preview_box_size * 0.9
+            else:
+                size = preview_box_size * 1.1
+            preview_rect = pygame.Rect(0, 0, size, size)
+            preview_rect.centerx = center_x
+            preview_rect.top = current_y
+            pygame.draw.rect(gameDisplay, BORDER_COLOR, preview_rect, 1)
+
+            inner_preview = preview_rect.inflate(-2, -2)
+            if inner_preview.width <= 0 or inner_preview.height <= 0:
+                inner_preview = preview_rect.copy()
+            pygame.draw.rect(gameDisplay, BLACK, inner_preview)
+
+            if self.hold_unlocked:
+                size = block_size * 0.9
+            else:
+                size = block_size
+
+            self.draw_piece_preview(piece_type, inner_preview, size)
+
+            current_y = preview_rect.bottom + preview_gap
+
+    def draw_start_prompt(self, xPosRef: int, yPosRef: int) -> None:
+        yBlockRef = 0.3
+        text0 = fontSB.render('press', False, self.whiteSineAnimation())
+        gameDisplay.blit(text0, (xPosRef + self.blockSize, yPosRef + yBlockRef * self.blockSize))
+        text1 = fontSB.render('enter', False, self.whiteSineAnimation())
+        gameDisplay.blit(text1, (xPosRef + self.blockSize, yPosRef + (yBlockRef + 1.5) * self.blockSize))
+        text2 = fontSB.render('to', False, self.whiteSineAnimation())
+        gameDisplay.blit(text2, (xPosRef + self.blockSize, yPosRef + (yBlockRef + 3) * self.blockSize))
+        if self.gameStatus == 'firstStart':
+            text3 = fontSB.render('start', False, self.whiteSineAnimation())
+        else:
+            text3 = fontSB.render('restart', False, self.whiteSineAnimation())
+        gameDisplay.blit(text3, (xPosRef + self.blockSize, yPosRef + (yBlockRef + 4.5) * self.blockSize))
+
+    def draw_pause_hint(self, xPosRef: int, score_panel_top: int) -> None:
+        hint_y = score_panel_top - fontSmall.get_height() - 64
+        #hint_y = max(hint_y, self.yPos)
+        hint_x = self.blockSize + 6
+        if self.gamePause:
+            hint_surface = fontSmall.render('P -> unpause', False, self.whiteSineAnimation())
+        else:
+            hint_surface = fontSmall.render('P -> pause', False, WHITE)
+        gameDisplay.blit(hint_surface, (hint_x, hint_y))
+
+    def draw_piece_preview(self, piece_type: str, target_rect: pygame.Rect, block_size: int) -> None:
+        if block_size <= 0:
+            return
+        definition = pieceDefs.get(piece_type)
+        if not definition:
+            return
+
+        rows = [coor[ROW] for coor in definition]
+        cols = [coor[COL] for coor in definition]
+        min_row, max_row = min(rows), max(rows)
+        min_col, max_col = min(cols), max(cols)
+
+        piece_width = (max_col - min_col + 1) * block_size
+        piece_height = (max_row - min_row + 1) * block_size
+        offset_x = target_rect.x + (target_rect.width - piece_width) // 2
+        offset_y = target_rect.y + (target_rect.height - piece_height) // 2
+
+        color = blockColors.get(piece_type, WHITE)
+        for row, col in definition:
+            x = offset_x + (col - min_col) * block_size
+            y = offset_y + (row - min_row) * block_size
+            pygame.draw.rect(gameDisplay, color, (x, y, block_size, block_size))
+            pygame.draw.rect(gameDisplay, BLACK, (x, y, block_size, block_size), 1)
 
     # All the screen drawings occurs in this function, called at each game loop iteration
 
     def draw_score_content(self, xPosRef, yLastBlock):
         fac = -8
+        positions = self._score_line_positions(yLastBlock, 6)
 
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
-        gameDisplay.blit(scoreText, (xPosRef + self.blockSize + fac, yLastBlock - 12 * self.blockSize))
+        gameDisplay.blit(scoreText, (xPosRef + self.blockSize + fac, positions[0]))
         scoreNumText = fontSB.render(str(self.score), False, NUM_COLOR)
-        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, yLastBlock - 10 * self.blockSize))
+        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, positions[1] - 10))
 
         levelText = fontSB.render('level:', False, TEXT_COLOR)
-        gameDisplay.blit(levelText, (xPosRef + self.blockSize + fac, yLastBlock - 8 * self.blockSize))
+        gameDisplay.blit(levelText, (xPosRef + self.blockSize + fac, positions[2] - 10))
         levelNumText = fontSB.render(str(self.level), False, NUM_COLOR)
-        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, yLastBlock - 6 * self.blockSize))
+        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, positions[3] - 10))
 
         level_up_score = 0
         for i in range(0, self.level + 1):
             level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
         level_up_score -= self.score
         linesText = fontSB.render('level Up:', False, TEXT_COLOR)
-        gameDisplay.blit(linesText, (xPosRef + self.blockSize + fac, yLastBlock - 4 * self.blockSize))
+        gameDisplay.blit(linesText, (xPosRef + self.blockSize + fac, positions[4] - 10))
         linesNumText = fontSB.render(str(int(level_up_score)), False, NUM_COLOR)
-        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, yLastBlock - 2 * self.blockSize))
+        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, positions[5] - 10))
     def draw(self):
 
         self.draw_GAMEBOARD_BORDER()
@@ -390,19 +586,53 @@ class MainBoard:
         return clearedLines
 
     def prepareNextSpawn(self):
-        self.generateNextPiece()
+        self.spawn_piece_from_queue()
         self.lineClearStatus = 'idle'
-        self.piece.status = 'uncreated'
 
-    def generateNextTwoPieces(self):
-        self.nextPieces[0] = pieceNames[rng.randint(0, 6)]
-        self.nextPieces[1] = pieceNames[rng.randint(0, 6)]
-        self.piece.type = self.nextPieces[0]
+    def refill_next_queue(self) -> None:
+        target_length = self.preview_count + 1
+        while len(self.nextPieces) < target_length:
+            self.nextPieces.append(pieceNames[rng.randint(0, 6)])
 
-    def generateNextPiece(self):
-        self.nextPieces[0] = self.nextPieces[1]
-        self.nextPieces[1] = pieceNames[rng.randint(0, 6)]
-        self.piece.type = self.nextPieces[0]
+    def _set_current_piece(self, piece_type: str, *, from_hold: bool = False, reset_hold_flag: bool = True) -> None:
+        self.piece = MovingPiece(self.colNum, self.rowNum, 'uncreated')
+        self.piece.type = piece_type
+        if reset_hold_flag:
+            self.hold_used_this_piece = False
+        self.num_pieces += 1
+        self.on_piece_spawned(from_hold=from_hold)
+
+    def spawn_piece_from_queue(self, *, reset_hold_flag: bool = True, from_hold: bool = False) -> None:
+        self.refill_next_queue()
+        if not self.nextPieces:
+            return
+        next_type = self.nextPieces.pop(0)
+        self._set_current_piece(next_type, from_hold=from_hold, reset_hold_flag=reset_hold_flag)
+        self.refill_next_queue()
+
+    def perform_hold(self) -> None:
+        if not self.hold_unlocked:
+            self.hold_unlocked = bool(self.get_upgrade_level("hold_unlocked"))
+            if not self.hold_unlocked:
+                return
+        if self.hold_used_this_piece or self.piece.status != 'moving':
+            return
+
+        current_type = self.piece.type
+        if self.hold_piece is None:
+            self.hold_piece = current_type
+            self.spawn_piece_from_queue(reset_hold_flag=False, from_hold=True)
+        else:
+            swap_type = self.hold_piece
+            self.hold_piece = current_type
+            self._set_current_piece(swap_type, from_hold=True, reset_hold_flag=False)
+
+        self.hold_used_this_piece = True
+        self.piece.move(self.blockMat)
+
+    def on_piece_spawned(self, from_hold: bool = False) -> None:
+        """Hook für Subklassen, wenn ein neues Piece gespawnt wurde."""
+        return
 
     def checkAndApplyGameOver(self):
         if self.piece.gameOverCondition == True:
@@ -507,6 +737,9 @@ class MainBoard:
 
                 if self.gameStatus != 'gameOver':
                     if self.piece.status == 'moving':
+                        if hasattr(key, "hold") and key.hold.trig:
+                            self.perform_hold()
+                            key.hold.trig = False
                         self.rotate_CC()
                         self.rotate_cCC()
 
@@ -519,6 +752,8 @@ class MainBoard:
                             key.hardDrop.trig = False
 
                     elif self.piece.status == 'collided':
+                        if hasattr(key, "hold") and key.hold.trig:
+                            key.hold.trig = False
                         if self.lineClearStatus == 'idle':
                             for i in range(0, 4):
                                 self.blockMat[self.piece.blocks[i].currentPos.row][
@@ -560,3 +795,4 @@ class MainBoard:
     def check_game_over(self):
         if self.gameStatus == 'gameOver' and key.enter.status == 'pressed':
             return True
+        return False

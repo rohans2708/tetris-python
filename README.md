@@ -44,6 +44,20 @@ R -> Restart
 
 P -> Pause/Unpause
 
+Space -> Hard Drop (requires upgrade)
+
+H -> Hold current piece (requires upgrade)
+
+## Persistent Upgrades
+
+Upgrades are stored per player in `upgrades.json` under `players[<name>]`.
+
+| Key             | Effect                                                     |
+|-----------------|------------------------------------------------------------|
+| `hard_drop`     | Unlocks the Space-bar hard drop                            |
+| `preview_plus`  | Adds additional next-piece previews (base is always one)   |
+| `hold_unlocked` | Unlocks the hold slot (press `H` to swap the active piece) |
+
 ## Screenshots
 
 <img src="Screenshots/tetris_initScreen.png" width="400">
@@ -51,3 +65,5 @@ P -> Pause/Unpause
 <img src="Screenshots/tetris_gamePlay.png" width="400">
 
 <img src="Screenshots/tetris_gameOver.png" width="400">
+
+<img src="Screenshots/tetris_hold_preview.png" width="400">

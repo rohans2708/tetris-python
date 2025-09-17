@@ -110,30 +110,32 @@ class Challenge_Rising_Flood(MainBoard):
     # ------------------------------------------------------------------
 
     def draw_score_content(self, xPosRef: int, yLastBlock: int) -> None:
+        positions = self._score_line_positions(yLastBlock, 8)
+
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
-        gameDisplay.blit(scoreText, (xPosRef + self.blockSize, yLastBlock - 12 * self.blockSize))
+        gameDisplay.blit(scoreText, (xPosRef + self.blockSize, positions[0]))
         scoreNumText = fontSB.render(str(self.score), False, NUM_COLOR)
-        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, yLastBlock - 10 * self.blockSize))
+        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, positions[1]))
 
         levelText = fontSB.render('level:', False, TEXT_COLOR)
-        gameDisplay.blit(levelText, (xPosRef + self.blockSize, yLastBlock - 8 * self.blockSize))
+        gameDisplay.blit(levelText, (xPosRef + self.blockSize, positions[2]))
         levelNumText = fontSB.render(str(self.level), False, NUM_COLOR)
-        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, yLastBlock - 6 * self.blockSize))
+        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, positions[3]))
 
         floodText = fontSB.render('flood:', False, TEXT_COLOR)
-        gameDisplay.blit(floodText, (xPosRef + self.blockSize, yLastBlock - 4 * self.blockSize))
+        gameDisplay.blit(floodText, (xPosRef + self.blockSize, positions[4]))
         seconds_left = max(
             0,
             math.ceil(self.frames_until_next_flood / self._frames_per_second),
         )
         floodValue = fontSB.render(f'{seconds_left}s', False, NUM_COLOR)
-        gameDisplay.blit(floodValue, (xPosRef + self.blockSize, yLastBlock - 3 * self.blockSize))
+        gameDisplay.blit(floodValue, (xPosRef + self.blockSize, positions[5]))
 
         level_up_score = 0
         for i in range(0, self.level + 1):
             level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
         level_up_score -= self.score
         linesText = fontSB.render('level Up:', False, TEXT_COLOR)
-        gameDisplay.blit(linesText, (xPosRef + self.blockSize, yLastBlock - 2 * self.blockSize))
+        gameDisplay.blit(linesText, (xPosRef + self.blockSize, positions[6]))
         linesNumText = fontSB.render(str(int(level_up_score)), False, NUM_COLOR)
-        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, yLastBlock - 1 * self.blockSize))
+        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, positions[7]))

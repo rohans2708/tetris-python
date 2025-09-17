@@ -46,17 +46,19 @@ class Challenge_No_Rows(MainBoard):
             self.level += 1
 
     def draw_score_content(self, xPosRef, yLastBlock):
+        positions = self._score_line_positions(yLastBlock, 6)
+
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
-        gameDisplay.blit(scoreText, (xPosRef + self.blockSize, yLastBlock - 12 * self.blockSize))
+        gameDisplay.blit(scoreText, (xPosRef + self.blockSize, positions[0]))
         scoreNumText = fontSB.render(str(self.score), False, NUM_COLOR)
-        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, yLastBlock - 10 * self.blockSize))
+        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, positions[1]))
 
         levelText = fontSB.render('level:', False, TEXT_COLOR)
-        gameDisplay.blit(levelText, (xPosRef + self.blockSize, yLastBlock - 8 * self.blockSize))
+        gameDisplay.blit(levelText, (xPosRef + self.blockSize, positions[2]))
         levelNumText = fontSB.render(str(self.level), False, NUM_COLOR)
-        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, yLastBlock - 6 * self.blockSize))
+        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, positions[3]))
 
         linesText = fontSB.render('blocks:', False, TEXT_COLOR)
-        gameDisplay.blit(linesText, (xPosRef + self.blockSize, yLastBlock - 4 * self.blockSize))
+        gameDisplay.blit(linesText, (xPosRef + self.blockSize, positions[4]))
         linesNumText = fontSB.render(str(self.pieces_to_place), False, NUM_COLOR)
-        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, yLastBlock - 2 * self.blockSize))
+        gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, positions[5]))

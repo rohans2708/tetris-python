@@ -38,10 +38,6 @@ class Challenge_Rotation_Limit(MainBoard):
             super().rotate(direction)
             self.rotations_left -= 1
 
-    def prepareNextSpawn(self):
-        self.rotations_left = self.base_rotations
-        super().prepareNextSpawn()
-
     # ---------- Scoreboard-Overlay ----------
 
     def draw_score_content(self, xPosRef: int, yLastBlock: int) -> None:
@@ -50,20 +46,23 @@ class Challenge_Rotation_Limit(MainBoard):
         Zeigt Score/Level und die verbleibenden Rotationen an.
         (Layout analog zu Challenge_No_Rows gehalten.)
         """
-        # Score
+        positions = self._score_line_positions(yLastBlock, 6)
+
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
-        gameDisplay.blit(scoreText, (xPosRef + self.blockSize, yLastBlock - 12 * self.blockSize))
+        gameDisplay.blit(scoreText, (xPosRef + self.blockSize, positions[0]))
         scoreNumText = fontSB.render(str(self.score), False, NUM_COLOR)
-        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, yLastBlock - 10 * self.blockSize))
+        gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, positions[1]))
 
-        # Level
         levelText = fontSB.render('level:', False, TEXT_COLOR)
-        gameDisplay.blit(levelText, (xPosRef + self.blockSize, yLastBlock - 8 * self.blockSize))
+        gameDisplay.blit(levelText, (xPosRef + self.blockSize, positions[2]))
         levelNumText = fontSB.render(str(self.level), False, NUM_COLOR)
-        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, yLastBlock - 6 * self.blockSize))
+        gameDisplay.blit(levelNumText, (xPosRef + self.blockSize, positions[3]))
 
-        # Verbleibende Rotationen (live)
         rotText = fontSB.render('rotations:', False, TEXT_COLOR)
-        gameDisplay.blit(rotText, (xPosRef + self.blockSize, yLastBlock - 4 * self.blockSize))
+        gameDisplay.blit(rotText, (xPosRef + self.blockSize, positions[4]))
         rotNumText = fontSB.render(str(max(0, self.rotations_left)), False, NUM_COLOR)
-        gameDisplay.blit(rotNumText, (xPosRef + self.blockSize, yLastBlock - 2 * self.blockSize))
+        gameDisplay.blit(rotNumText, (xPosRef + self.blockSize, positions[5]))
+
+    def on_piece_spawned(self, from_hold: bool = False) -> None:
+        self.rotations_left = self.base_rotations + max(0, self.get_upgrade_level("rotation_buffer"))
+        super().on_piece_spawned(from_hold)
