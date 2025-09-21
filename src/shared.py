@@ -7,6 +7,10 @@ import pandas as pd
 
 pygame.init()
 pygame.font.init()
+pygame.mixer.init()
+
+# Load background music
+pygame.mixer.music.load('music/2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
 
 gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT)) #, pygame.FULLSCREEN)
 gameClock = GameClock()

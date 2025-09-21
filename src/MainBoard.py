@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import math
+
+import pygame.mixer_music
+
 from MovingPiece import MovingPiece
 from config import *
 from shared import gameClock, gameDisplay, key, rng, SCORES
@@ -13,6 +16,7 @@ class MainBoard:
     def __init__(self, starting_level, score=0, upgrades: dict | None = None):
 
         # Size and position initiations
+        self.gameOver_accepted = False
         self.blockSize = blockSize
         self.xPos = boardPosX
         self.yPos = boardPosX
@@ -149,7 +153,7 @@ class MainBoard:
         self.gameStatus = 'running'
         self.gamePause = False
 
-        self.bomb_available = self.bomb_unlocked
+        self.bomb_available = self.upgrades_data.get("bomb_block", 0) > 0
         self.bomb_queued = False
 
         # self.score = 0
@@ -375,12 +379,12 @@ class MainBoard:
         if hold_message_lines:
             message_height = len(hold_message_lines) * label_height + (len(hold_message_lines) - 1) * 2
 
-        box_count = self.preview_count + 1
+        box_count = self.preview_count
         total_label_height = label_height * 2
-        total_gap = section_gap + preview_gap * max(0, self.preview_count - 1)
+        total_gap = section_gap + preview_gap * max(0, self.preview_count)
         available_for_boxes = available_height - top_margin - total_label_height - total_gap - message_height
         if available_for_boxes <= 0:
-            available_for_boxes = (self.preview_count + 1) * 16
+            available_for_boxes = (self.preview_count) * 16
 
         block_size = 0
         if box_count > 0:
@@ -484,7 +488,7 @@ class MainBoard:
                     bomb_color = GRAY
 
                 bombText = fontSmall.render(bomb_text, False, bomb_color)
-                gameDisplay.blit(bombText, (xPosRef + 1 * self.blockSize, yLastBlock - 14 * self.blockSize))
+                gameDisplay.blit(bombText, (xPosRef + 1 * self.blockSize,  400))
 
         else:
 
@@ -653,7 +657,7 @@ class MainBoard:
         self.lineClearStatus = 'idle'
 
     def refill_next_queue(self) -> None:
-        target_length = self.preview_count + 1
+        target_length = self.preview_count
         while len(self.nextPieces) < target_length:
             self.nextPieces.append(pieceNames[rng.randint(0, 6)])
 
@@ -671,9 +675,10 @@ class MainBoard:
         if self.piece.type == BOMB_PIECE_NAME or self.nextPieces[1] == BOMB_PIECE_NAME:
             return False
 
-        self.nextPieces[1] = BOMB_PIECE_NAME
+        self.nextPieces[0] = BOMB_PIECE_NAME
         self.upgrades_data["bomb_block"] = max(0, self.upgrades_data.get("bomb_block", 1) - 1)
         self.bomb_queued = True
+        self.draw_SCOREBOARD_CONTENT()
         return True
 
     def generateNextTwoPieces(self):
@@ -722,6 +727,9 @@ class MainBoard:
     def checkAndApplyGameOver(self):
         if self.piece.gameOverCondition == True:
             self.gameStatus = 'gameOver'
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load("music/stinger-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3")
+            pygame.mixer.music.play()
             for i in range(0, 4):
                 if self.piece.blocks[i].currentPos.row >= 0 and self.piece.blocks[i].currentPos.col >= 0:
                     self.blockMat[self.piece.blocks[i].currentPos.row][
@@ -807,8 +815,9 @@ class MainBoard:
         elif self.gameStatus == 'gameOver':
             self.saveHighscore()
             # Check for player input to restart the game
+
             if key.enter.status == 'pressed':
-                self.restart()
+                self.gameOver_accepted = True
 
 
         elif self.gameStatus == 'running':
@@ -894,6 +903,6 @@ class MainBoard:
             key.cRotate.trig = False
 
     def check_game_over(self):
-        if self.gameStatus == 'gameOver' and key.enter.status == 'pressed':
+        if self.gameStatus == 'gameOver' and self.gameOver_accepted:
             return True
         return False
