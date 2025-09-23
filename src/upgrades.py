@@ -40,9 +40,9 @@ def _ensure_storage() -> Dict[str, Any]:
         return payload
 
 
-def _coerce_int(value: Any, default: int) -> int:
+def _coerce_int(value: Any, default: float) -> float:
     try:
-        return int(value)
+        return float(value)
     except Exception:
         return default
 
@@ -87,7 +87,7 @@ def save_upgrades(name: str, data: Dict[str, Any]) -> None:
     unlocked_source = data.get("unlocked", {})
     for key in unlocked_target.keys():
         if key in data:
-            unlocked_target[key] = _coerce_int(data[key], unlocked_target[key])
+            unlocked_target[key] = (_coerce_int(data[key], unlocked_target[key]))
         elif key in unlocked_source:
             unlocked_target[key] = _coerce_int(unlocked_source[key], unlocked_target[key])
 

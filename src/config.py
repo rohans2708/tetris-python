@@ -11,11 +11,11 @@ pieceNames = ('I', 'O', 'T', 'S', 'Z', 'J', 'L')
 # Special piece that can be triggered via upgrade (not part of normal random bag)
 BOMB_PIECE_NAME = 'BOMB'
 
-STARTING_SPEED = 48
-SPEED_MULTIPLIER = 0.9
+STARTING_SPEED = 52
+SPEED_MULTIPLIER = 0.95
 
-LEVEL_SCORE = 700
-LEVEL_SCORE_MULTIPLIER = 1.1
+LEVEL_SCORE = 400
+LEVEL_SCORE_MULTIPLIER = 1.122
 
 STARTING_LEVEL = 0 #Change this to start a new game at a higher level
 
@@ -75,7 +75,7 @@ levelSpeeds = (48,43,38,33,28,23,18,13,8,6,5,5,5,4,4,4,3,3,3,2,2,2,2,2,2,2,2,2,2
 #Each 10 cleared lines means a level up.
 #After level 29, speed is always 1. Max level is 99
 
-baseLinePoints = (0,40,100,300,1200)
+baseLinePoints = (0,100,300,600,1200)
 #Total score is calculated as: Score = level*baseLinePoints[clearedLineNumberAtATime] + totalDropCount
 #Drop means the action the player forces the piece down instead of free fall(By key combinations: down, down-left, down-rigth arrows)
 

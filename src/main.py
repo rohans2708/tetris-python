@@ -226,10 +226,16 @@ def challenge_lv_5(target_level, current_board, upgrades_data, name, challenge_e
             upgrades_data[upgrade] += 1
         else:
             if upgrades_data.get("bomb_unlocked", 0) != 0:
-                upgrades_data["bomb_block"] += 3
-                challenge_done_screen_bomb()
+                # 70% chance for bomb block, 30% for score multiplier
+                if random.choices([True, False], weights=[70, 30])[0]:
+                    upgrades_data["bomb_block"] += 3
+                    challenge_done_screen_bomb()
+                else:
+                    upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.1
+                    challenge_done_screen_score()
             else:
-                challenge_done_screen()
+                upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.1
+                challenge_done_screen_score()
     else:
         if upgrades_data.get("bomb_unlocked", 0) != 0:
             upgrades_data["bomb_block"] += 3
@@ -254,18 +260,18 @@ def challenge_lv_10(target_level, current_board, upgrades_data, name, challenge_
         else:
             # random upgrade for smother gravity or score multiplier
             if random.choice([True, False]):
-                upgrades_data["smoother_gravity"] += 0.5
+                upgrades_data["smoother_gravity"] += 1
                 challenge_done_screen_smooth_fall()
             else:
-                upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.1
+                upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.3
                 challenge_done_screen_score()
     else:
         # random upgrade for smother gravity or score multiplier
         if random.choice([True, False]):
-            upgrades_data["smoother_gravity"] += 0.5
+            upgrades_data["smoother_gravity"] += 1
             challenge_done_screen_smooth_fall()
         else:
-            upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.1
+            upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.3
             challenge_done_screen_score()
 
     return False
@@ -310,6 +316,11 @@ def calc_current_level(score, level_up_score=0):
         if level_up_score > score:
             return i
 
+def calc_score_for_level(level, level_up_score=0):
+    for i in range(0, level):
+        level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
+    return level_up_score
+
 
 if __name__ == '__main__':
     try:
@@ -321,39 +332,49 @@ if __name__ == '__main__':
         upgrades_data = load_upgrades(name)
 
         while True:
-            current_board = MainBoard(STARTING_LEVEL, score= 0, upgrades=upgrades_data)
-            if normal_game(target_level=5, current_board=current_board, name=name):
+            current_board = MainBoard(STARTING_LEVEL, score= calc_score_for_level(0), upgrades=upgrades_data)
+            if normal_game(target_level=3, current_board=current_board, name=name):
                 continue
 
-            current_board = Challenge_No_Rows(5, current_board.score, 20, upgrades=upgrades_data)
-            if challenge_lv_5(target_level=6, current_board=current_board, upgrades_data=upgrades_data, name=name, challenge_explanation=challenge_explanation_screen_no_rows, upgrade="ghost_piece", upgrade_screen=challenge_done_screen_no_rows):
+            current_board = Challenge_No_Rows(3, current_board.score, 25, upgrades=upgrades_data)
+            if challenge_lv_5(target_level=4, current_board=current_board, upgrades_data=upgrades_data, name=name, challenge_explanation=challenge_explanation_screen_no_rows, upgrade="ghost_piece", upgrade_screen=challenge_done_screen_no_rows):
                 continue
+            if calc_current_level(current_board.score) < 7:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=7, current_board=current_board, name=name):
+                    continue
+                # if the player has no bomb blocks, give them 3 for the challenge
+
+                flood_interval = 15
+                old_bomb = upgrades_data.get("bomb_block", 0)
+                current_board = Challenge_Rising_Flood(calc_current_level(current_board.score), current_board.score,flood_interval_seconds=flood_interval,upgrades=upgrades_data)
+                if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name, challenge_explanation=lambda:challenge_explanation_screen_rising_flood(flood_interval), upgrade="bomb_unlocked", upgrade_screen=challenge_done_screen_rising_flood):
+                    continue
+                if old_bomb == 0 and upgrades_data.get("bomb_block", 0) == 0:
+                    upgrades_data["bomb_block"] = 3
 
             if calc_current_level(current_board.score) < 10:
                 current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
                 if normal_game(target_level=10, current_board=current_board, name=name):
                     continue
-                # if the player has no bomb blocks, give them 3 for the challenge
 
-                flood_interval = 12
-                old_bomb = upgrades_data.get("bomb_block", 0)
-                current_board = Challenge_Rising_Flood(calc_current_level(current_board.score), current_board.score,flood_interval_seconds=flood_interval,upgrades=upgrades_data)
-                if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name, challenge_explanation=lambda:challenge_explanation_screen_rising_flood(flood_interval), upgrade="hard_drop", upgrade_screen=None):
+                extra_rotation = upgrades_data.get("unlocked", {}).get("rotation_buffer", 0)
+                current_board = Challenge_Rotation_Limit(calc_current_level(current_board.score), current_board.score, base_rotations=2, upgrades=upgrades_data)
+                if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                   challenge_explanation=lambda: challenge_explanation_screen_rotation_limit(2,
+                                                                                                             extra_rotation),
+                                   upgrade="hard_drop", upgrade_screen=challenge_done_screen_rotation_limit):
                     continue
-                if old_bomb == 0 and upgrades_data.get("bomb_unlocked", 0) == 0:
-                    upgrades_data["bomb_block"] = 3
 
             if calc_current_level(current_board.score) < 15:
                 current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
                 if normal_game(target_level=15, current_board=current_board, name=name):
                     continue
 
-                extra_rotation = upgrades_data.get("unlocked", {}).get("rotation_buffer", 0)
-                current_board = Challenge_Rotation_Limit(calc_current_level(current_board.score), current_board.score, base_rotations=2, upgrades=upgrades_data)
-                if challenge_lv_5(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
-                                   challenge_explanation=lambda: challenge_explanation_screen_rotation_limit(2,
-                                                                                                             extra_rotation),
-                                   upgrade="rotation_buffer", upgrade_screen=challenge_done_screen_rotation_limit):
+                current_board = Challenge_Upside_Down(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if challenge_lv_25(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                  challenge_explanation=challenge_explanation_screen_upside_down, upgrade="hold_unlocked",
+                                  upgrade_screen=challenge_done_screen_upside_down):
                     continue
 
             if calc_current_level(current_board.score) < 20:
@@ -361,22 +382,82 @@ if __name__ == '__main__':
                 if normal_game(target_level=20, current_board=current_board, name=name):
                     continue
 
-                current_board = Challenge_Upside_Down(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                current_board = Challenge_Spin(calc_current_level(current_board.score), current_board.score + 2175, rotate_delay=47, upgrades=upgrades_data)
                 if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
-                                  challenge_explanation=challenge_explanation_screen_upside_down, upgrade="hold_unlocked",
-                                  upgrade_screen=challenge_done_screen_upside_down):
-                    continue
+                                    challenge_explanation=challenge_explanation_screen_spin, upgrade="preview_plus",
+                                    upgrade_screen=challenge_done_screen_preview):
+                        continue
 
             if calc_current_level(current_board.score) < 25:
                 current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
                 if normal_game(target_level=25, current_board=current_board, name=name):
                     continue
 
-                current_board = Challenge_Spin(calc_current_level(current_board.score), current_board.score, rotate_delay=15, upgrades=upgrades_data)
-                if challenge_lv_25(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
-                                    challenge_explanation=challenge_explanation_screen_spin, upgrade="preview_plus",
-                                    upgrade_screen=None):
+                current_board = Challenge_No_Rows(calc_current_level(current_board.score), current_board.score, 27, upgrades=upgrades_data)
+                if challenge_lv_5(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                    challenge_explanation=challenge_explanation_screen_no_rows):
                         continue
+
+            if calc_current_level(current_board.score) < 30:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=30, current_board=current_board, name=name):
+                    continue
+
+                flood_interval = 10
+                current_board = Challenge_Rising_Flood(calc_current_level(current_board.score), current_board.score,flood_interval_seconds=flood_interval,upgrades=upgrades_data)
+                if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                   challenge_explanation=lambda:challenge_explanation_screen_rising_flood(flood_interval)):
+                    continue
+
+            if calc_current_level(current_board.score) < 35:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=35, current_board=current_board, name=name):
+                    continue
+
+                extra_rotation = upgrades_data.get("unlocked", {}).get("rotation_buffer", 0)
+                current_board = Challenge_Rotation_Limit(calc_current_level(current_board.score), current_board.score, base_rotations=1, upgrades=upgrades_data)
+                if challenge_lv_5(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                   challenge_explanation=lambda: challenge_explanation_screen_rotation_limit(1,
+                                                                                                             extra_rotation)):
+                    continue
+
+            if calc_current_level(current_board.score) < 40:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=40, current_board=current_board, name=name):
+                    continue
+
+                current_board = Challenge_Upside_Down(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                  challenge_explanation=challenge_explanation_screen_upside_down):
+                    continue
+
+            if calc_current_level(current_board.score) < 45:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=45, current_board=current_board, name=name):
+                    continue
+
+                current_board = Challenge_Spin(calc_current_level(current_board.score), current_board.score, rotate_delay=10, upgrades=upgrades_data)
+                if challenge_lv_5(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                    challenge_explanation=challenge_explanation_screen_spin):
+                        continue
+
+            if calc_current_level(current_board.score) < 50:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=50, current_board=current_board, name=name):
+                    continue
+
+                current_board = Challenge_No_Rows(calc_current_level(current_board.score), current_board.score, 52, upgrades=upgrades_data)
+                if challenge_lv_25(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                    challenge_explanation=challenge_explanation_screen_no_rows):
+                        continue
+
+
+
+
+
+            current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+            if normal_game(target_level=99, current_board=current_board, name=name):
+                continue
 
 
             break

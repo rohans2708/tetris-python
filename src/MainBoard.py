@@ -501,7 +501,7 @@ class MainBoard:
                     bomb_text = 'Bombe'
                     bomb_color = self.redBlinkAnimation()
                 elif self.bomb_available:
-                    bomb_text = f'B -> Bombe {self.upgrades_data.get("bomb_block", 0)}x'
+                    bomb_text = f'B -> Bombe {int(self.upgrades_data.get("bomb_block", 0))}x'
                     bomb_color = self.redBlinkAnimation()
                 else:
                     bomb_text = ''
@@ -560,13 +560,13 @@ class MainBoard:
         top = score_panel_top - fontSmall.get_height() + 230
         score_multiplier = self.upgrades_data.get("score_multiplier", 1)
         if score_multiplier > 1:
-            multiplier_surface = font_big.render(f'Score x{score_multiplier}', False, ORANGE)
+            multiplier_surface = font_big.render(f'Score x{round(score_multiplier, 1)}', False, ORANGE)
             gameDisplay.blit(multiplier_surface, (hint_x, top))
 
         # the same for smoother gravity
         smoother_gravity = self.get_upgrade_level("smoother_gravity")
         if smoother_gravity > 0:
-            gravity_surface = font_big.render(f'Smoother Gravity Lv. {smoother_gravity}', False, ORANGE)
+            gravity_surface = font_big.render(f'Smoother Gravity Lv. {int(smoother_gravity / 4)}', False, ORANGE)
             gameDisplay.blit(gravity_surface, (hint_x + 200, top))
 
     def draw_pause_hint(self, xPosRef: int, score_panel_top: int) -> None:
@@ -605,13 +605,13 @@ class MainBoard:
         top = score_panel_top - fontSmall.get_height() + 230
         score_multiplier = self.upgrades_data.get("score_multiplier", 1)
         if score_multiplier > 1:
-            multiplier_surface = font_big.render(f'Score x{score_multiplier}', False, ORANGE)
+            multiplier_surface = font_big.render(f'Score x{round(score_multiplier, 1)}', False, ORANGE)
             gameDisplay.blit(multiplier_surface, (hint_x, top))
 
         # the same for smoother gravity
         smoother_gravity = self.get_upgrade_level("smoother_gravity")
         if smoother_gravity > 0:
-            gravity_surface = font_big.render(f'Smoother Gravity Lv. {smoother_gravity}', False, ORANGE)
+            gravity_surface = font_big.render(f'Smoother Gravity Lv. {int(smoother_gravity/4)}', False, ORANGE)
             gameDisplay.blit(gravity_surface, (hint_x + 200, top))
 
     def draw_piece_preview(self, piece_type: str, target_rect: pygame.Rect, block_size: int) -> None:
@@ -868,7 +868,7 @@ class MainBoard:
             except AttributeError:
                 multiplier = 1
 
-        self.score = self.score + ((self.level + 1) * baseLinePoints[clearedLinesNum] + self.piece.dropScore) * multiplier
+        self.score = self.score + baseLinePoints[clearedLinesNum] * multiplier
         if self.score > 999999:
             self.score = 999999
         self.lines = self.lines + clearedLinesNum

@@ -116,7 +116,7 @@ class Challenge_Rising_Flood(MainBoard):
 
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
         gameDisplay.blit(scoreText, (xPosRef + self.blockSize, positions[0]))
-        scoreNumText = fontSB.render(str(self.score), False, NUM_COLOR)
+        scoreNumText = fontSB.render(str(int(self.score)), False, NUM_COLOR)
         gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, positions[1]))
 
         levelText = fontSB.render('level:', False, TEXT_COLOR)
