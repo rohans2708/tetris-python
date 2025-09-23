@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import Any, Dict
 
 # Basiswerte für die freischaltbaren Upgrades
-DEFAULT_UNLOCKED: Dict[str, int] = {
+DEFAULT_UNLOCKED: Dict[str, float] = {
     "rotation_buffer": 0,
     "ghost_piece": 0,
     "smoother_gravity": 0,
     "score_multiplier": 1,
     "hard_drop": 0,
     "bomb_block": 0,
+    "bomb_unlocked": 0,
     "preview_plus": 0,
     "hold_unlocked": 0,
 }
@@ -53,7 +54,7 @@ def load_upgrades(name: str) -> Dict[str, Any]:
     player_entry = players.get(name, {})
 
     unlocked_raw = player_entry.get("unlocked", {})
-    unlocked: Dict[str, int] = {
+    unlocked: Dict[str, float] = {
         key: _coerce_int(unlocked_raw.get(key, default), default)
         for key, default in DEFAULT_UNLOCKED.items()
     }

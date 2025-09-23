@@ -1,201 +1,176 @@
 # Python
 import sys
 
-import pygame
-
-from config import *
-from shared import gameDisplay
-
 
 def challenge_explanation_screen_no_rows():
-    # Initialize the screen
+    # now a big text "upside down" in the middle of the screen upside down
     gameDisplay.fill(BLACK)
-    font = pygame.font.Font(None, 50)
+    font = pygame.font.Font(None, 100)
+    text_surface = font.render("Reverse Tetris", True, WHITE)
+    text_rect = text_surface.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2))
+    gameDisplay.blit(text_surface, text_rect)
 
-    # Render challenge explanation
-    challenge_text = [
-        "Challenge Explanation:",
-        "1. Lose if a row is completely filled.",
-        "2. Place 20 pieces to level up."
-    ]
+    # a text that explains the challenge below in one line
+    font_small = pygame.font.Font(None, 40)
+    explanation_text = font_small.render(f"Clear a line and you Loose", True,
+                                         WHITE)
+    explanation_rect = explanation_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 80))
+    gameDisplay.blit(explanation_text, explanation_rect)
 
-    for i, line in enumerate(challenge_text):
-        text_surface = font.render(line, True, WHITE)
-        text_rect = text_surface.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 3 + i * 50))
-        gameDisplay.blit(text_surface, text_rect)
-
-    # Render prompt to continue
-    continue_text = font.render("Press ENTER to continue...", True, WHITE)
-    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT - 100))
+    # render prompt to continue
+    font_small = pygame.font.Font(None, 30)
+    continue_text = font_small.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT - 50))
     gameDisplay.blit(continue_text, continue_rect)
-
     pygame.display.flip()
 
-    # Wait for user input
-    while True:
+    # wait for user to press enter
+    waiting = True
+    while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.key == pygame.K_RETURN:
-                return
-
-def challenge_done_screen_no_rows():
-    # Initialize the screen
-    gameDisplay.fill(BLACK)
-    font = pygame.font.Font(None, 50)
-
-    # Render challenge explanation
-    challenge_text = [
-        "Challenge Passed:",
-        "You unlocked the ghost piece feature!",
-    ]
-
-    for i, line in enumerate(challenge_text):
-        text_surface = font.render(line, True, WHITE)
-        text_rect = text_surface.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + i * 50))
-        gameDisplay.blit(text_surface, text_rect)
-
-    # Render prompt to continue
-    continue_text = font.render("Press ENTER to continue...", True, WHITE)
-    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT - 100))
-    gameDisplay.blit(continue_text, continue_rect)
-
-    pygame.display.flip()
-
-    # Wait for user input
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.key == pygame.K_RETURN:
-                return
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                waiting = False
 
 # --- ROTATION LIMIT CHALLENGE SCREENS -----------------------------------------
 import pygame
 from config import DISPLAY_WIDTH, DISPLAY_HEIGHT, BLACK, WHITE, fontTitle, fontSmall
-from shared import gameDisplay
+gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT))
 
 def _center(surface, y):
     rect = surface.get_rect(center=(DISPLAY_WIDTH // 2, y))
     gameDisplay.blit(surface, rect)
 
 def challenge_explanation_screen_rotation_limit(base_rotations: int, extra_from_upgrades: int):
-    """
-    Zeigt einen Erklär-Screen für die Rotationslimit-Challenge.
-    base_rotations: Grundlimit pro Stein (z.B. 2)
-    extra_from_upgrades: Bonus-Rotationen durch dauerhaftes Upgrade (z.B. rotation_buffer)
-    """
-    pygame.display.get_surface().fill(BLACK)
+    # now a big text "upside down" in the middle of the screen upside down
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 100)
+    text_surface = font.render("ROTATIONLIMIT", True, WHITE)
+    text_rect = text_surface.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2))
+    gameDisplay.blit(text_surface, text_rect)
 
-    title = fontTitle.render("Challenge: Rotationslimit", True, WHITE)
-    _center(title, DISPLAY_HEIGHT // 5)
+    # a text that explains the challenge below in one line
+    font_small = pygame.font.Font(None, 40)
+    text_str = f"You can only rotate {base_rotations} times per piece" + (f" (+{extra_from_upgrades} from upgrades)" if extra_from_upgrades > 0 else "")
+    explanation_text = font_small.render(text_str, True, WHITE)
+    explanation_rect = explanation_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 80))
+    gameDisplay.blit(explanation_text, explanation_rect)
 
-    # Textzeilen
-    total = base_rotations + max(0, extra_from_upgrades)
-    lines = [
-        f"Jedes Piece darf nur {base_rotations} Rotationen ausführen.",
-        f"Dauerhaftes Upgrade-Bonus: +{max(0, extra_from_upgrades)}",
-        f"Effektiv: {total} Rotationen pro Piece.",
-        "Unten rechts siehst du live, wie viele Rotationen übrig sind.",
-        "Drücke ENTER, um zu starten.",
-    ]
-
-    y = DISPLAY_HEIGHT // 3
-    for txt in lines:
-        surf = fontSmall.render(txt, True, WHITE)
-        _center(surf, y)
-        y += 40
-
+    # render prompt to continue
+    font_small = pygame.font.Font(None, 30)
+    continue_text = font_small.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT - 50))
+    gameDisplay.blit(continue_text, continue_rect)
     pygame.display.flip()
 
-    # warten bis ENTER
+    # wait for user to press enter
     waiting = True
     while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                raise SystemExit
+                sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 waiting = False
 
 def challenge_done_screen_rotation_limit():
-    """Optionaler 'Geschafft!'-Screen nach der Challenge."""
-    pygame.display.get_surface().fill(BLACK)
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
 
-    title = fontTitle.render("Rotationslimit geschafft!", True, WHITE)
-    _center(title, DISPLAY_HEIGHT // 2 - 30)
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
 
-    hint = fontSmall.render("Drücke ENTER, um weiterzuspielen.", True, WHITE)
-    _center(hint, DISPLAY_HEIGHT // 2 + 30)
+    # unlocked hold funktion with H key
+    text = font.render("Your unlocked INSTANT-DROP with SPACE", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
 
     pygame.display.flip()
 
-    waiting = True
-    while waiting:
+    # Wait for user input
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                raise SystemExit
+                sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                waiting = False
+                return
 
 
 def challenge_explanation_screen_rising_flood(interval_seconds: float) -> None:
-    """Intro screen for the Rising Flood (Garbage-Rush) challenge."""
-    pygame.display.get_surface().fill(BLACK)
+    # now a big text "upside down" in the middle of the screen upside down
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 100)
+    text_surface = font.render("GARBAGE FLOOD", True, WHITE)
+    text_rect = text_surface.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2))
+    gameDisplay.blit(text_surface, text_rect)
 
-    title = fontTitle.render("Challenge: Rising Flood", True, WHITE)
-    _center(title, DISPLAY_HEIGHT // 5)
+    # a text that explains the challenge below in one line
+    font_small = pygame.font.Font(None, 40)
+    explanation_text = font_small.render(f"Every {interval_seconds:.1f} seconds, a garbage row rises from below!", True, WHITE)
+    explanation_rect = explanation_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 80))
+    gameDisplay.blit(explanation_text, explanation_rect)
 
-    interval_text = int(round(interval_seconds))
-    lines = [
-        f"Alle {interval_text} Sekunden drückt eine Müllreihe das Feld nach oben.",
-        "Sie lässt nur ein zufälliges Loch frei.",
-        "Ist die oberste Reihe schon belegt, bedeutet die Flut Game Over.",
-        "Rechts findest du Countdown und Anzahl der Flutreihen.",
-        "Drücke ENTER, um zu starten.",
-    ]
-
-    y = DISPLAY_HEIGHT // 3
-    for txt in lines:
-        surf = fontSmall.render(txt, True, WHITE)
-        _center(surf, y)
-        y += 40
-
+    # render prompt to continue
+    font_small = pygame.font.Font(None, 30)
+    continue_text = font_small.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT - 50))
+    gameDisplay.blit(continue_text, continue_rect)
     pygame.display.flip()
 
+    # wait for user to press enter
     waiting = True
     while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                raise SystemExit
+                sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 waiting = False
 
 
 def challenge_done_screen_rising_flood() -> None:
-    """Simple completion screen after surviving the Rising Flood challenge."""
-    pygame.display.get_surface().fill(BLACK)
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
 
-    title = fontTitle.render("Rising Flood geschafft!", True, WHITE)
-    _center(title, DISPLAY_HEIGHT // 2 - 30)
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
 
-    hint = fontSmall.render("Drücke ENTER, um weiterzumachen.", True, WHITE)
-    _center(hint, DISPLAY_HEIGHT // 2 + 30)
+    # unlocked hold funktion with H key
+    text = font.render("Your unlocked BOMB-Feature and 3 BOMBS", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
 
     pygame.display.flip()
 
-    waiting = True
-    while waiting:
+    # Wait for user input
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                raise SystemExit
+                sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                waiting = False
+                return
 
 
 def challenge_done_screen_bomb_unlock() -> None:
@@ -239,8 +214,60 @@ def challenge_done_screen():
     gameDisplay.blit(title_text, title_rect)
 
     # Render prompt to continue
+    font = pygame.font.Font(None, 30)
     continue_text = font.render("Press ENTER to continue...", True, WHITE)
-    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 50))
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
+
+    pygame.display.flip()
+
+
+def challenge_explanation_screen_upside_down():
+    # now a big text "upside down" in the middle of the screen upside down
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 100)
+    text_surface = font.render("UPSIDE DOWN", True, WHITE)
+    text_surface = pygame.transform.rotate(text_surface, 180)
+    text_rect = text_surface.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2))
+    gameDisplay.blit(text_surface, text_rect)
+    pygame.display.flip()
+
+    # render prompt to continue
+    font_small = pygame.font.Font(None, 30)
+    continue_text = font_small.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT - 50))
+    gameDisplay.blit(continue_text, continue_rect)
+    pygame.display.flip()
+
+    # wait for user to press enter
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                waiting = False
+
+def challenge_done_screen_upside_down():
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
+
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
+
+    # unlocked hold funktion with H key
+    text = font.render("You unlocked the Hold feature!", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
     gameDisplay.blit(continue_text, continue_rect)
 
     pygame.display.flip()
@@ -253,3 +280,224 @@ def challenge_done_screen():
                 sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 return
+
+
+def challenge_done_screen_bomb():
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
+
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
+
+    # unlocked hold funktion with H key
+    text = font.render("You receive 3 BOMBS", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
+
+    pygame.display.flip()
+
+    # Wait for user input
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                return
+
+def challenge_done_screen_score():
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
+
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
+
+    # unlocked hold funktion with H key
+    text = font.render("Your Score multiplier increases", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
+
+    pygame.display.flip()
+
+    # Wait for user input
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                return
+
+def challenge_done_screen_smooth_fall():
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
+
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
+
+    # unlocked hold funktion with H key
+    text = font.render("Your Falling Speed decreases", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
+
+    pygame.display.flip()
+
+    # Wait for user input
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                return
+
+def challenge_done_screen_preview():
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
+
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
+
+    # unlocked hold funktion with H key
+    text = font.render("Your unlocked an extra preview space", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
+
+    pygame.display.flip()
+
+    # Wait for user input
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                return
+
+def challenge_done_screen_no_rows():
+    # Clear the screen
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 50)
+
+    # Render challenge completion message
+    title_text = font.render("Challenge Completed!", True, WHITE)
+    title_rect = title_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50))
+    gameDisplay.blit(title_text, title_rect)
+
+    # unlocked hold funktion with H key
+    text = font.render("You unlocked the ghost piece feature", True, WHITE)
+    text_rect = text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 +25))
+    gameDisplay.blit(text, text_rect)
+
+    # Render prompt to continue
+    font = pygame.font.Font(None, 30)
+    continue_text = font.render("Press ENTER to continue...", True, WHITE)
+    continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 150))
+    gameDisplay.blit(continue_text, continue_rect)
+
+    pygame.display.flip()
+
+    # Wait for user input
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                return
+
+def challenge_explanation_screen_spin():
+    # now a big text "SPIN" in the middle of the screen that rotates slowly
+    gameDisplay.fill(BLACK)
+    font = pygame.font.Font(None, 100)
+    angle = 0
+    clock = pygame.time.Clock()
+    waiting = True
+
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                waiting = False
+
+        gameDisplay.fill(BLACK)
+        text_surface = font.render("SPIN", True, WHITE)
+        rotated_surface = pygame.transform.rotate(text_surface, angle)
+        text_rect = rotated_surface.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2))
+        gameDisplay.blit(rotated_surface, text_rect)
+
+        # render prompt to continue
+        font_small = pygame.font.Font(None, 30)
+        continue_text = font_small.render("Press ENTER to continue...", True, WHITE)
+        continue_rect = continue_text.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT - 50))
+        gameDisplay.blit(continue_text, continue_rect)
+
+        pygame.display.flip()
+        angle = (angle + 90) % 360
+        clock.tick(3)
+
+
+def main():
+    # test all screens
+    challenge_explanation_screen_no_rows()
+    challenge_done_screen_no_rows()
+
+    challenge_explanation_screen_rising_flood(10.0)
+    challenge_done_screen_rising_flood()
+
+    challenge_explanation_screen_rotation_limit(2, 1)
+    challenge_explanation_screen_rotation_limit(2, 0)
+    challenge_done_screen_rotation_limit()
+
+    challenge_explanation_screen_upside_down()
+    challenge_done_screen_upside_down()
+
+    challenge_explanation_screen_spin()
+    challenge_done_screen_preview()
+
+    challenge_done_screen_smooth_fall()
+    challenge_done_screen_score()
+    challenge_done_screen_bomb()
+
+
+if __name__ == "__main__":
+    main()
+

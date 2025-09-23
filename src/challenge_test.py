@@ -17,6 +17,9 @@ class Challenge_No_Rows(MainBoard):
     def checkAndApplyGameOver(self):
         # Lose condition: A row is completely filled
         if self.line_cleared:
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load("music/stinger-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3")
+            pygame.mixer.music.play()
             self.gameStatus = 'gameOver'
             return
 
@@ -47,6 +50,8 @@ class Challenge_No_Rows(MainBoard):
 
     def draw_score_content(self, xPosRef, yLastBlock):
         positions = self._score_line_positions(yLastBlock, 6)
+        # subtract 10 from each position
+        positions = [pos - 10 for pos in positions]
 
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
         gameDisplay.blit(scoreText, (xPosRef + self.blockSize, positions[0]))

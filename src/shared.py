@@ -9,8 +9,13 @@ pygame.init()
 pygame.font.init()
 pygame.mixer.init()
 
-# Load background music
-pygame.mixer.music.load('music/2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
+line_clear_sound = pygame.mixer.Sound("music/sfx28-attack-338386.mp3")
+tetris_sound = pygame.mixer.Sound("music/victory-85561.mp3")
+level_up_sound = pygame.mixer.Sound("music/8-bit-powerup-6768.mp3")
+bomb_sound = pygame.mixer.Sound("music/8-bit-explosion-3-340456.mp3")
+piece_landed_sound = pygame.mixer.Sound("music/retro-hurt-1-236672.mp3")
+level_up_sound.set_volume(0.8)
+#tetris_sound.set_volume(10)
 
 gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT)) #, pygame.FULLSCREEN)
 gameClock = GameClock()

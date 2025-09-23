@@ -43,7 +43,7 @@ def gameLoop(name, target_level, mainBoard):
                     if key.rotate.status == 'idle':
                         key.rotate.trig = True
                         key.rotate.status = 'pressed'
-                if event.key == pygame.K_z:
+                if event.key == pygame.K_LSHIFT:
                     if key.cRotate.status == 'idle':
                         key.cRotate.trig = True
                         key.cRotate.status = 'pressed'
@@ -79,7 +79,7 @@ def gameLoop(name, target_level, mainBoard):
                     key.down.status = 'released'
                 if event.key == pygame.K_UP:
                     key.rotate.status = 'idle'
-                if event.key == pygame.K_z:
+                if event.key == pygame.K_LSHIFT:
                     key.cRotate.status = 'idle'
                 if event.key == pygame.K_p:
                     key.pause.status = 'idle'
@@ -197,6 +197,119 @@ def confirm_existing_name(name):
                 if event.key == pygame.K_n:  # Deny
                     return False
 
+def normal_game(target_level, current_board, name):
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load('music/2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
+    pygame.mixer.music.play(-1)  # Loop the music indefinitely
+    return gameLoop(name=name, target_level=target_level, mainBoard=current_board)
+
+def challenge_setup(challenge_explanation):
+    # load challenge music
+    pygame.mixer.music.load('music/fast-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3')
+    pygame.mixer.music.play(-1)  # Loop the music indefinitely
+    challenge_explanation()
+    # skip the music to 30 seconds
+    pygame.mixer.music.set_pos(30)
+def challenge_lv_5(target_level, current_board, upgrades_data, name, challenge_explanation, upgrade = None, upgrade_screen = None):
+    # setup
+    challenge_setup(challenge_explanation)
+    if gameLoop(name=name, target_level=target_level, mainBoard=current_board):
+        return True
+
+    # laod the stinger
+    pygame.mixer.music.load('music/stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
+    pygame.mixer.music.play()  # Play the stinger once
+
+    if upgrade:
+        if upgrades_data.get(upgrade, 0) == 0:
+            upgrade_screen()
+            upgrades_data[upgrade] += 1
+        else:
+            if upgrades_data.get("bomb_unlocked", 0) != 0:
+                upgrades_data["bomb_block"] += 3
+                challenge_done_screen_bomb()
+            else:
+                challenge_done_screen()
+    else:
+        if upgrades_data.get("bomb_unlocked", 0) != 0:
+            upgrades_data["bomb_block"] += 3
+            challenge_done_screen_bomb()
+
+    return False
+
+def challenge_lv_10(target_level, current_board, upgrades_data, name, challenge_explanation, upgrade=None,upgrade_screen=None):
+    # setup
+    challenge_setup(challenge_explanation)
+    if gameLoop(name=name, target_level=target_level, mainBoard=current_board):
+        return True
+
+    # laod the stinger
+    pygame.mixer.music.load('music/stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
+    pygame.mixer.music.play()  # Play the stinger once
+
+    if upgrade:
+        if upgrades_data.get(upgrade, 0) == 0:
+            upgrade_screen()
+            upgrades_data[upgrade] += 1
+        else:
+            # random upgrade for smother gravity or score multiplier
+            if random.choice([True, False]):
+                upgrades_data["smoother_gravity"] += 0.5
+                challenge_done_screen_smooth_fall()
+            else:
+                upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.1
+                challenge_done_screen_score()
+    else:
+        # random upgrade for smother gravity or score multiplier
+        if random.choice([True, False]):
+            upgrades_data["smoother_gravity"] += 0.5
+            challenge_done_screen_smooth_fall()
+        else:
+            upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.1
+            challenge_done_screen_score()
+
+    return False
+
+
+def challenge_lv_25(target_level, current_board, upgrades_data, name, challenge_explanation, upgrade=None,upgrade_screen=None):
+    # setup
+    challenge_setup(challenge_explanation)
+    if gameLoop(name=name, target_level=target_level, mainBoard=current_board):
+        return True
+
+    # laod the stinger
+    pygame.mixer.music.load('music/stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
+    pygame.mixer.music.play()  # Play the stinger once
+
+    if upgrade:
+        if upgrades_data.get(upgrade, 0) == 0:
+            upgrade_screen()
+            upgrades_data[upgrade] += 1
+        else:
+            # random upgrade for smother gravity or score multiplier
+            if upgrades_data.get("preview_plus", 0) >= 3:
+                upgrades_data["bomb_block"] += 3
+                challenge_done_screen_bomb()
+            else:
+                upgrades_data["preview_plus"] += 1
+                challenge_done_screen_preview()
+    else:
+        # random upgrade for smother gravity or score multiplier
+        if upgrades_data.get("preview_plus", 0) >= 3:
+            upgrades_data["bomb_block"] += 3
+            challenge_done_screen_bomb()
+        else:
+            upgrades_data["preview_plus"] += 1
+            challenge_done_screen_preview()
+
+    return False
+
+def calc_current_level(score, level_up_score=0):
+    for i in range(0, 10000):
+        level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
+        if level_up_score > score:
+            return i
+
 
 if __name__ == '__main__':
     try:
@@ -208,152 +321,64 @@ if __name__ == '__main__':
         upgrades_data = load_upgrades(name)
 
         while True:
-            # start the background music
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load('music/2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play(-1)  # Loop the music indefinitely
             current_board = MainBoard(STARTING_LEVEL, score= 0, upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=5, mainBoard=current_board):
+            if normal_game(target_level=5, current_board=current_board, name=name):
                 continue
-            # stop the background music
-            pygame.mixer.music.stop()
 
-            # load challenge music
-            pygame.mixer.music.load('music/fast-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play(-1)  # Loop the music indefinitely
-            # Challenge: Keine Reihen dürfen voll werden
-            challenge_explanation_screen_no_rows()
-            # skip the music to 30 seconds
-            pygame.mixer.music.set_pos(30)
             current_board = Challenge_No_Rows(5, current_board.score, 20, upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=6, mainBoard=current_board):
+            if challenge_lv_5(target_level=6, current_board=current_board, upgrades_data=upgrades_data, name=name, challenge_explanation=challenge_explanation_screen_no_rows, upgrade="ghost_piece", upgrade_screen=challenge_done_screen_no_rows):
                 continue
 
-            # laod the stinger
-            pygame.mixer.music.load('music/stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play()  # Play the stinger once
-            if upgrades_data["ghost_piece"] == 0:
-                challenge_done_screen_no_rows()
-                upgrades_data["ghost_piece"] = 1  # Ghost-Piece freischalten
-            else:
-                challenge_done_screen()
+            if calc_current_level(current_board.score) < 10:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=10, current_board=current_board, name=name):
+                    continue
+                # if the player has no bomb blocks, give them 3 for the challenge
 
-            # stop the challenge music
-            pygame.mixer.music.stop()
-            # load the normal background music
-            pygame.mixer.music.load('music/2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play(-1)  # Loop the music indefinitely
-            # Basisspiel weiterführen, Ghost aktiv
-            current_board = MainBoard(6, current_board.score, upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=10, mainBoard=current_board):
-                continue
+                flood_interval = 12
+                old_bomb = upgrades_data.get("bomb_block", 0)
+                current_board = Challenge_Rising_Flood(calc_current_level(current_board.score), current_board.score,flood_interval_seconds=flood_interval,upgrades=upgrades_data)
+                if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name, challenge_explanation=lambda:challenge_explanation_screen_rising_flood(flood_interval), upgrade="hard_drop", upgrade_screen=None):
+                    continue
+                if old_bomb == 0 and upgrades_data.get("bomb_unlocked", 0) == 0:
+                    upgrades_data["bomb_block"] = 3
 
-            # stop the background music
-            pygame.mixer.music.stop()
-            # load challenge music
-            pygame.mixer.music.load('music/fast-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play(-1)  # Loop the music indefinitely
-            # Challenge: Rising Flood (Garbage-Rush)
-            flood_interval = 12
-            challenge_explanation_screen_rising_flood(flood_interval)
-            current_board = Challenge_Rising_Flood(10,current_board.score,flood_interval_seconds=flood_interval,upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=11, mainBoard=current_board):
-                continue
+            if calc_current_level(current_board.score) < 15:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=15, current_board=current_board, name=name):
+                    continue
 
-            # laod the stinger
-            pygame.mixer.music.load('music/stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play()  # Play the stinger once
-            if upgrades_data.get("bomb_block", 0) == 0:
-                challenge_done_screen_rising_flood()
-                upgrades_data["bomb_block"] += 3 # Bomb-Block freischalten
-            else:
-                challenge_done_screen()
-                # random upgrade for smother gravity or score multiplier
-                if random.choice([True, False]):
-                    upgrades_data["smoother_gravity"] += 0.5
-                else:
-                    upgrades_data["score_multiplier"] = upgrades_data.get("score_multiplier", 1) + 0.1
+                extra_rotation = upgrades_data.get("unlocked", {}).get("rotation_buffer", 0)
+                current_board = Challenge_Rotation_Limit(calc_current_level(current_board.score), current_board.score, base_rotations=2, upgrades=upgrades_data)
+                if challenge_lv_5(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                   challenge_explanation=lambda: challenge_explanation_screen_rotation_limit(2,
+                                                                                                             extra_rotation),
+                                   upgrade="rotation_buffer", upgrade_screen=challenge_done_screen_rotation_limit):
+                    continue
 
-            # stop the challenge music
-            pygame.mixer.music.stop()
-            # load the normal background music
-            pygame.mixer.music.load('music/2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play(-1)  # Loop the music indefinitely
-            current_board = MainBoard(11, current_board.score, upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=15, mainBoard=current_board):
-                continue
+            if calc_current_level(current_board.score) < 20:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=20, current_board=current_board, name=name):
+                    continue
 
-            # stop the background music
-            pygame.mixer.music.stop()
-            # load challenge music
-            pygame.mixer.music.load('music/fast-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play(-1)  # Loop the music indefinitely
-            # Challenge: Rotationslimit-Challenge
-            extra_rot = 0
-            try:
-                extra_rot = int(upgrades_data.get("unlocked", {}).get("rotation_buffer", 0))
-            except Exception:
-                extra_rot = 0
+                current_board = Challenge_Upside_Down(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if challenge_lv_10(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                  challenge_explanation=challenge_explanation_screen_upside_down, upgrade="hold_unlocked",
+                                  upgrade_screen=challenge_done_screen_upside_down):
+                    continue
 
-            base_rotations = 2
-            challenge_explanation_screen_rotation_limit(base_rotations, extra_rot)
-            current_board = Challenge_Rotation_Limit(15, current_board.score, base_rotations=2,
-                                                     upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=16, mainBoard=current_board):
-                continue
-            # laod the stinger
-            pygame.mixer.music.load('music/stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3')
-            pygame.mixer.music.play()  # Play the stinger once
-            if upgrades_data.get("hard_drop", 0) == 0:
-                upgrades_data["hard_drop"] = 1
-                challenge_done_screen_rotation_limit()
-            else:
-                if random.choice([True, False]):
-                    upgrades_data["bomb_block"] += 3
-                else:
-                    if upgrades_data.get("rotation_buffer", 0) >= 4:
-                        upgrades_data["bomb_block"] += 3
-                    else:
-                        upgrades_data["rotation_buffer"] = upgrades_data.get("rotation_buffer", 0) + 1
+            if calc_current_level(current_board.score) < 25:
+                current_board = MainBoard(calc_current_level(current_board.score), current_board.score, upgrades=upgrades_data)
+                if normal_game(target_level=25, current_board=current_board, name=name):
+                    continue
 
-                challenge_done_screen()
+                current_board = Challenge_Spin(calc_current_level(current_board.score), current_board.score, rotate_delay=15, upgrades=upgrades_data)
+                if challenge_lv_25(target_level=calc_current_level(current_board.score) + 1, current_board=current_board, upgrades_data=upgrades_data, name=name,
+                                    challenge_explanation=challenge_explanation_screen_spin, upgrade="preview_plus",
+                                    upgrade_screen=None):
+                        continue
 
-            # Challenge: Spin-Challenge (autom. Rotation)
-            current_board = Challenge_Spin(8, current_board.score, rotate_delay=30, upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=10, mainBoard=current_board):
-                continue
 
-            # Challenge: Rotationslimit-Challenge
-            extra_rot = 0
-            try:
-                extra_rot = int(upgrades_data.get("unlocked", {}).get("rotation_buffer", 0))
-            except Exception:
-                extra_rot = 0
-
-            base_rotations = 2
-            challenge_explanation_screen_rotation_limit(base_rotations, extra_rot)
-            current_board = Challenge_Rotation_Limit(10, current_board.score, base_rotations=2, upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=12, mainBoard=current_board):
-                continue
-            challenge_done_screen_rotation_limit()
-
-            # Challenge: Rising Flood (Garbage-Rush)
-            flood_interval = 12
-            challenge_explanation_screen_rising_flood(flood_interval)
-            current_board = Challenge_Rising_Flood(
-                12,
-                current_board.score,
-                flood_interval_seconds=flood_interval,
-                upgrades=upgrades_data,
-            )
-            if gameLoop(name=name, target_level=15, mainBoard=current_board):
-                continue
-            challenge_done_screen_rising_flood()
-
-            # Wieder zurück zum Basisspiel (bis Level 50)
-            current_board = MainBoard(15, current_board.score, upgrades=upgrades_data)
-            if gameLoop(name=name, target_level=50, mainBoard=current_board):
-                continue
             break
     except Exception as e:
         # Fehler-Handling

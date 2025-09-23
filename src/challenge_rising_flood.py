@@ -110,7 +110,9 @@ class Challenge_Rising_Flood(MainBoard):
     # ------------------------------------------------------------------
 
     def draw_score_content(self, xPosRef: int, yLastBlock: int) -> None:
-        positions = self._score_line_positions(yLastBlock, 8)
+        positions = self._score_line_positions(yLastBlock, 6)
+        # subtract 10 from each position
+        positions = [pos - 10 for pos in positions]
 
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
         gameDisplay.blit(scoreText, (xPosRef + self.blockSize, positions[0]))
@@ -131,6 +133,7 @@ class Challenge_Rising_Flood(MainBoard):
         floodValue = fontSB.render(f'{seconds_left}s', False, NUM_COLOR)
         gameDisplay.blit(floodValue, (xPosRef + self.blockSize, positions[5]))
 
+        """
         level_up_score = 0
         for i in range(0, self.level + 1):
             level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
@@ -139,3 +142,4 @@ class Challenge_Rising_Flood(MainBoard):
         gameDisplay.blit(linesText, (xPosRef + self.blockSize, positions[6]))
         linesNumText = fontSB.render(str(int(level_up_score)), False, NUM_COLOR)
         gameDisplay.blit(linesNumText, (xPosRef + self.blockSize, positions[7]))
+        """

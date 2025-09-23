@@ -1,23 +1,11 @@
-"""
-Rotation-Limit-Challenge für das Tetris-Spiel.
-
-Jedes Piece darf nur eine begrenzte Anzahl Rotationen ausführen, bevor es
-sperrt. Die Basiszahl an erlaubten Rotationen kann konfiguriert werden.
-Über das dauerhafte Upgrade `rotation_buffer` erhält der Spieler weitere
-Rotationen pro Stein. Nach dem Spawn eines neuen Steins wird der Zähler
-neu gesetzt.
-"""
-
 from __future__ import annotations
 
-from typing import Callable
 from MainBoard import MainBoard
-from src.config import fontSB, TEXT_COLOR, NUM_COLOR  # Fonts/Farben
-from src.shared import gameDisplay, key  # Surface für Textausgabe
+from src.config import fontSB, TEXT_COLOR, NUM_COLOR
+from src.shared import gameDisplay
 
 
 class Challenge_Rotation_Limit(MainBoard):
-    """Challenge-Board: Limitiert Rotationen pro Stein und zeigt Rest an."""
 
     def __init__(
         self,
@@ -33,7 +21,6 @@ class Challenge_Rotation_Limit(MainBoard):
     # ---------- Rotations-Logik ----------
 
     def rotate(self, direction):
-        """Rotation nur erlauben, wenn noch welche übrig sind."""
         if self.rotations_left > 0:
             super().rotate(direction)
             self.rotations_left -= 1
@@ -41,12 +28,9 @@ class Challenge_Rotation_Limit(MainBoard):
     # ---------- Scoreboard-Overlay ----------
 
     def draw_score_content(self, xPosRef: int, yLastBlock: int) -> None:
-        """
-        Zusätzlicher Scoreboard-Block für diese Challenge.
-        Zeigt Score/Level und die verbleibenden Rotationen an.
-        (Layout analog zu Challenge_No_Rows gehalten.)
-        """
         positions = self._score_line_positions(yLastBlock, 6)
+        # 10 Pixel nach oben verschieben
+        positions = [pos - 10 for pos in positions]
 
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
         gameDisplay.blit(scoreText, (xPosRef + self.blockSize, positions[0]))

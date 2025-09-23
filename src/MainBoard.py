@@ -6,7 +6,8 @@ import pygame.mixer_music
 
 from MovingPiece import MovingPiece
 from config import *
-from shared import gameClock, gameDisplay, key, rng, SCORES
+from shared import gameClock, gameDisplay, key, rng, SCORES, line_clear_sound, tetris_sound, level_up_sound, bomb_sound, \
+    piece_landed_sound
 
 
 class MainBoard:
@@ -38,7 +39,7 @@ class MainBoard:
         self.gamePause = False
         self.nextPieces: list[str] = []
 
-        self.score = score
+        self.score = int(score)
         self.level = starting_level
         self.lines = 0
         self.num_pieces = 0
@@ -60,6 +61,7 @@ class MainBoard:
 
         self.updateSpeed()
         self.relapse_keys()
+        self.updateSpeed()
 
     def perform_hard_drop(self):
         """
@@ -79,23 +81,39 @@ class MainBoard:
             pass
 
     def relapse_keys(self):
+        # Bewegungen
         key.down.trig = False
-        key.down.status = 'released'
+        key.down.status = 'idle'
+
+        key.xNav.status = 'idle'  # links/rechts Navigation
+
+        # Rotationen
         key.cRotate.trig = False
-        key.cRotate.status = 'released'
+        key.cRotate.status = 'idle'
+
         key.rotate.trig = False
-        key.rotate.status = 'released'
+        key.rotate.status = 'idle'
+
+        # Spezialaktionen
         key.bomb.trig = False
-        key.bomb.status = 'released'
-        key.down.trig = False
-        key.down.status = 'released'
-        key.cRotate.trig = False
-        key.cRotate.status = 'released'
-        key.rotate.trig = False
-        key.rotate.status = 'released'
+        key.bomb.status = 'idle'
+
+        key.hardDrop.trig = False
+        key.hardDrop.status = 'idle'
+
         if hasattr(key, "hold"):
             key.hold.trig = False
             key.hold.status = 'idle'
+
+        # Sonstiges
+        key.pause.trig = False
+        key.pause.status = 'idle'
+
+        key.restart.trig = False
+        key.restart.status = 'idle'
+
+        key.enter.trig = False
+        key.enter.status = 'idle'
 
     def _ensure_upgrade_defaults(self) -> None:
         if self.upgrades_data is None:
@@ -161,6 +179,7 @@ class MainBoard:
         self.lines = 0
 
         gameClock.restart(self.level)
+        self.updateSpeed()
 
     def erase_BLOCK(self, xRef, yRef, row, col):
         pygame.draw.rect(gameDisplay, BLACK,
@@ -379,7 +398,7 @@ class MainBoard:
         if hold_message_lines:
             message_height = len(hold_message_lines) * label_height + (len(hold_message_lines) - 1) * 2
 
-        box_count = self.preview_count
+        box_count = self.preview_count + (1 if self.hold_unlocked else 0)
         total_label_height = label_height * 2
         total_gap = section_gap + preview_gap * max(0, self.preview_count)
         available_for_boxes = available_height - top_margin - total_label_height - total_gap - message_height
@@ -452,7 +471,7 @@ class MainBoard:
         current_y = next_label_rect.bottom + 2
 
         self.refill_next_queue()
-        for piece_type in self.nextPieces[:self.preview_count]:
+        for piece_type in self.nextPieces[:self.preview_count + 1]:
             if self.hold_unlocked:
                 size = preview_box_size * 0.9
             else:
@@ -461,6 +480,7 @@ class MainBoard:
             preview_rect.centerx = center_x
             preview_rect.top = current_y
             pygame.draw.rect(gameDisplay, BORDER_COLOR, preview_rect, 1)
+            current_y = preview_rect.bottom + preview_gap
 
             inner_preview = preview_rect.inflate(-2, -2)
             if inner_preview.width <= 0 or inner_preview.height <= 0:
@@ -488,7 +508,7 @@ class MainBoard:
                     bomb_color = GRAY
 
                 bombText = fontSmall.render(bomb_text, False, bomb_color)
-                gameDisplay.blit(bombText, (xPosRef + 1 * self.blockSize,  400))
+                gameDisplay.blit(bombText, (xPosRef + 1 * self.blockSize,  score_panel_top - fontSmall.get_height() + 300))
 
         else:
 
@@ -508,15 +528,91 @@ class MainBoard:
             text3 = fontSB.render('restart', False, self.whiteSineAnimation())
         gameDisplay.blit(text3, (xPosRef + self.blockSize, yPosRef + (yBlockRef + 4.5) * self.blockSize))
 
+        yLastBlock = self.yPos + (self.blockSize * self.rowNum)
+        score_panel_top = self._score_panel_top(yLastBlock)
+        hint_y = score_panel_top - fontSmall.get_height() + 260
+        pos_y_hard_drop = hint_y + 13
+        # hint_y = max(hint_y, self.yPos)
+        hint_x = self.blockSize + 50
+
+        if self.upgrades_data.get("hard_drop", 0) > 0:
+            if self.piece.status == 'moving':
+                hard_drop_color = WHITE
+            else:
+                hard_drop_color = GRAY
+            hard_drop_surface = fontSmall.render('SPACE -> hard drop', False, hard_drop_color)
+            gameDisplay.blit(hard_drop_surface, (hint_x + 228, pos_y_hard_drop))
+
+        # draw also the controls here
+        controls_y = hint_y + 13
+        controls = [
+            ('Left/Right', 'move'),
+            ('Down', 'faster drop'),
+            ('Up', 'rotate'),
+            ('Shift', 'rotate counter'),
+        ]
+        for i, (key_name, action) in enumerate(controls):
+            control_surface = fontSmall.render(f'{key_name} -> {action}', False, WHITE)
+            gameDisplay.blit(control_surface, (hint_x, controls_y + i * 13))
+
+        # draw score muliplier if > 1
+        font_big = pygame.font.SysFont('Arial', 12, bold=True)
+        top = score_panel_top - fontSmall.get_height() + 230
+        score_multiplier = self.upgrades_data.get("score_multiplier", 1)
+        if score_multiplier > 1:
+            multiplier_surface = font_big.render(f'Score x{score_multiplier}', False, ORANGE)
+            gameDisplay.blit(multiplier_surface, (hint_x, top))
+
+        # the same for smoother gravity
+        smoother_gravity = self.get_upgrade_level("smoother_gravity")
+        if smoother_gravity > 0:
+            gravity_surface = font_big.render(f'Smoother Gravity Lv. {smoother_gravity}', False, ORANGE)
+            gameDisplay.blit(gravity_surface, (hint_x + 200, top))
+
     def draw_pause_hint(self, xPosRef: int, score_panel_top: int) -> None:
-        hint_y = score_panel_top - fontSmall.get_height() - 64
+        hint_y = score_panel_top - fontSmall.get_height() + 260
+        pos_y_hard_drop = hint_y + 13
         #hint_y = max(hint_y, self.yPos)
-        hint_x = self.blockSize + 6
+        hint_x = self.blockSize + 50
         if self.gamePause:
             hint_surface = fontSmall.render('P -> unpause', False, self.whiteSineAnimation())
         else:
             hint_surface = fontSmall.render('P -> pause', False, WHITE)
         gameDisplay.blit(hint_surface, (hint_x, hint_y))
+
+        if self.upgrades_data.get("hard_drop", 0) > 0:
+            if self.piece.status == 'moving':
+                hard_drop_color = WHITE
+            else:
+                hard_drop_color = GRAY
+            hard_drop_surface = fontSmall.render('SPACE -> hard drop', False, hard_drop_color)
+            gameDisplay.blit(hard_drop_surface, (hint_x + 228, pos_y_hard_drop))
+
+        # draw also the controls here
+        controls_y = hint_y + 13
+        controls = [
+            ('Left/Right', 'move'),
+            ('Down', 'faster drop'),
+            ('Up', 'rotate'),
+            ('Shift', 'rotate counter'),
+        ]
+        for i, (key_name, action) in enumerate(controls):
+            control_surface = fontSmall.render(f'{key_name} -> {action}', False, WHITE)
+            gameDisplay.blit(control_surface, (hint_x, controls_y + i * 13))
+
+        # draw score muliplier if > 1
+        font_big = pygame.font.SysFont('Arial', 12, bold=True)
+        top = score_panel_top - fontSmall.get_height() + 230
+        score_multiplier = self.upgrades_data.get("score_multiplier", 1)
+        if score_multiplier > 1:
+            multiplier_surface = font_big.render(f'Score x{score_multiplier}', False, ORANGE)
+            gameDisplay.blit(multiplier_surface, (hint_x, top))
+
+        # the same for smoother gravity
+        smoother_gravity = self.get_upgrade_level("smoother_gravity")
+        if smoother_gravity > 0:
+            gravity_surface = font_big.render(f'Smoother Gravity Lv. {smoother_gravity}', False, ORANGE)
+            gameDisplay.blit(gravity_surface, (hint_x + 200, top))
 
     def draw_piece_preview(self, piece_type: str, target_rect: pygame.Rect, block_size: int) -> None:
         if block_size <= 0:
@@ -550,7 +646,7 @@ class MainBoard:
 
         scoreText = fontSB.render('score:', False, TEXT_COLOR)
         gameDisplay.blit(scoreText, (xPosRef + self.blockSize + fac, positions[0]))
-        scoreNumText = fontSB.render(str(self.score), False, NUM_COLOR)
+        scoreNumText = fontSB.render(str(int(self.score)), False, NUM_COLOR)
         gameDisplay.blit(scoreNumText, (xPosRef + self.blockSize, positions[1] - 10))
 
         levelText = fontSB.render('level:', False, TEXT_COLOR)
@@ -635,7 +731,11 @@ class MainBoard:
         return clearedLines
 
     def handle_bomb_explosion(self):
-        """Entfernt Blöcke rund um die Bombe und bereitet den nächsten Spawn vor."""
+        # play the bomb sound effect
+        try:
+            bomb_sound.play()
+        except Exception:
+            pass
         for block in self.piece.blocks:
             row = block.currentPos.row
             col = block.currentPos.col
@@ -672,7 +772,7 @@ class MainBoard:
         """Ersetzt den nächsten Stein durch eine Bombe, falls verfügbar."""
         if self.upgrades_data.get("bomb_block", 0) == 0 or self.bomb_queued:
             return False
-        if self.piece.type == BOMB_PIECE_NAME or self.nextPieces[1] == BOMB_PIECE_NAME:
+        if self.piece.type == BOMB_PIECE_NAME or self.nextPieces[0] == BOMB_PIECE_NAME:
             return False
 
         self.nextPieces[0] = BOMB_PIECE_NAME
@@ -745,6 +845,22 @@ class MainBoard:
             if self.clearedLines[i] > -1:
                 clearedLinesNum = clearedLinesNum + 1
 
+        if clearedLinesNum > 0 and clearedLinesNum < 4:
+            # play sound effect
+            try:
+                line_clear_sound.play()
+            except Exception:
+                pass
+        elif clearedLinesNum == 4:
+            try:
+                # Pause the music if it's playing
+                pygame.mixer.music.pause()
+                tetris_sound.play()
+                # Resume the music after the tetris sound finishes
+                pygame.mixer.music.unpause()
+            except Exception:
+                pass
+
         multiplier = 1
         if self.upgrades_data:
             try:
@@ -760,6 +876,12 @@ class MainBoard:
         for i in range(0, self.level + 1):
             level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** i)
         while self.score > level_up_score:
+            # play the level up sound
+            try:
+                # check if tetris_sound is still playing, if so, stop it first
+                level_up_sound.play()
+            except Exception:
+                pass
             self.level = self.level + 1
             level_up_score += LEVEL_SCORE * (LEVEL_SCORE_MULTIPLIER ** self.level)
         if self.level > 99:
