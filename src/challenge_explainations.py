@@ -172,37 +172,6 @@ def challenge_done_screen_rising_flood() -> None:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 return
 
-
-def challenge_done_screen_bomb_unlock() -> None:
-    """Screen shown when the bomb block upgrade is unlocked."""
-    pygame.display.get_surface().fill(BLACK)
-
-    title = fontTitle.render("Bombenblock freigeschaltet!", True, WHITE)
-    _center(title, DISPLAY_HEIGHT // 2 - 40)
-
-    hint_lines = [
-        "Drücke B im Spiel, um den nächsten Stein durch eine Bombe zu ersetzen.",
-        "Die Bombe blinkt rot und zerstört angrenzende Blöcke beim Aufprall.",
-        "Bestätige mit ENTER, um weiterzuspielen.",
-    ]
-
-    y = DISPLAY_HEIGHT // 2 + 20
-    for text in hint_lines:
-        surface = fontSmall.render(text, True, WHITE)
-        _center(surface, y)
-        y += 35
-
-    pygame.display.flip()
-
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                raise SystemExit
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                waiting = False
-
 def challenge_done_screen():
     # Clear the screen
     gameDisplay.fill(BLACK)

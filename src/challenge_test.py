@@ -1,4 +1,3 @@
-# Python
 from MainBoard import MainBoard
 from src.config import *
 from src.shared import gameDisplay, SCORES

@@ -1,11 +1,3 @@
-"""Challenge mode: Rising Flood (Garbage-Rush).
-
-Periodically injects a garbage row from the bottom that pushes the field
-upwards. A countdown shows when the next flood arrives and how many rows have
-already risen. If the stack (or active piece) touches the top when the flood
-hits, the game ends immediately.
-"""
-
 from __future__ import annotations
 
 import math
@@ -16,7 +8,6 @@ from src.shared import gameDisplay, rng
 
 
 class Challenge_Rising_Flood(MainBoard):
-    """MainBoard variant with periodic garbage rows rising from below."""
 
     _frames_per_second = 60
 
@@ -35,9 +26,6 @@ class Challenge_Rising_Flood(MainBoard):
         self.frames_until_next_flood = self.flood_interval_frames
         self.flood_rows_added = 0
 
-    # ------------------------------------------------------------------
-    # Lifecycle helpers
-    # ------------------------------------------------------------------
 
     def restart(self) -> None:
         super().restart()
@@ -48,10 +36,6 @@ class Challenge_Rising_Flood(MainBoard):
         super().gameAction()
         if self.gameStatus == 'running' and not self.gamePause:
             self._update_flood_timer()
-
-    # ------------------------------------------------------------------
-    # Flood mechanics
-    # ------------------------------------------------------------------
 
     def _update_flood_timer(self) -> None:
         if self.frames_until_next_flood > 0:
@@ -64,20 +48,16 @@ class Challenge_Rising_Flood(MainBoard):
             if flooded:
                 self.frames_until_next_flood = self.flood_interval_frames
             else:
-                # try again shortly (e.g. while a line clear animation runs)
                 self.frames_until_next_flood = 1
 
     def _trigger_flood(self) -> bool:
-        # Avoid conflicting with the line clear animation – try again shortly.
         if self.lineClearStatus != 'idle':
             return False
 
-        # If the top row already contains blocks, the rising flood ends the game.
         if any(cell != 'empty' for cell in self.blockMat[0]):
             self.gameStatus = 'gameOver'
             return False
 
-        # Active piece reaches the ceiling – cannot raise the board safely.
         if self.piece.status == 'moving':
             if any(block.currentPos.row <= 0 for block in self.piece.blocks):
                 self.gameStatus = 'gameOver'
@@ -87,11 +67,9 @@ class Challenge_Rising_Flood(MainBoard):
         return True
 
     def _raise_board(self) -> None:
-        # Push the locked stack upwards by one row.
         for row in range(self.rowNum - 1):
             self.blockMat[row] = list(self.blockMat[row + 1])
 
-        # Inject new garbage row with a random hole at the bottom.
         hole_col = rng.randint(0, self.colNum - 1)
         new_row = ['garbage'] * self.colNum
         new_row[hole_col] = 'empty'
@@ -99,19 +77,13 @@ class Challenge_Rising_Flood(MainBoard):
 
         self.flood_rows_added += 1
 
-        # Move the active piece one row up to match the rising stack.
         if self.piece.status == 'moving':
             for block in self.piece.blocks:
                 block.currentPos.row -= 1
                 block.nextPos.row = block.currentPos.row
 
-    # ------------------------------------------------------------------
-    # Scoreboard overlay
-    # ------------------------------------------------------------------
-
     def draw_score_content(self, xPosRef: int, yLastBlock: int) -> None:
         positions = self._score_line_positions(yLastBlock, 6)
-        # subtract 10 from each position
         positions = [pos - 10 for pos in positions]
 
         scoreText = fontSB.render('score:', False, TEXT_COLOR)

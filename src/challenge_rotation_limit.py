@@ -18,14 +18,10 @@ class Challenge_Rotation_Limit(MainBoard):
         self.base_rotations = max(0, int(base_rotations))
         self.rotations_left: int = self.base_rotations
 
-    # ---------- Rotations-Logik ----------
-
     def rotate(self, direction):
         if self.rotations_left > 0:
             super().rotate(direction)
             self.rotations_left -= 1
-
-    # ---------- Scoreboard-Overlay ----------
 
     def draw_score_content(self, xPosRef: int, yLastBlock: int) -> None:
         positions = self._score_line_positions(yLastBlock, 6)

@@ -1,5 +1,3 @@
-"""Utility helpers for loading and saving persistent player upgrades."""
-
 from __future__ import annotations
 
 import json
@@ -48,7 +46,6 @@ def _coerce_int(value: Any, default: float) -> float:
 
 
 def load_upgrades(name: str) -> Dict[str, Any]:
-    """Lädt die Upgrade-Daten für einen Spieler oder liefert Standardwerte."""
     storage = _ensure_storage()
     players = storage.setdefault("players", {})
     player_entry = players.get(name, {})
@@ -70,7 +67,6 @@ def load_upgrades(name: str) -> Dict[str, Any]:
         "meta": {"meta_currency": meta_currency},
     }
 
-    # Für Abwärtskompatibilität: direkte Schlüssel spiegeln
     for key, value in unlocked.items():
         result[key] = value
     result["meta_currency"] = meta_currency

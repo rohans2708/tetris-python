@@ -64,10 +64,6 @@ class MainBoard:
         self.updateSpeed()
 
     def perform_hard_drop(self):
-        """
-        Setzt das aktuelle Piece sofort auf die Ghost-Position und markiert es
-        als 'collided', damit es noch im selben Frame gelockt und gewertet wird.
-        """
         if self.piece.status != 'moving':
             return
         try:
@@ -77,7 +73,7 @@ class MainBoard:
                 self.piece.blocks[i].currentPos.row = ghost_rows[i]
             self.piece.status = 'collided'
         except Exception:
-            # Falls irgendwas schiefgeht: ignoriere Hard-Drop
+            # Falls irgendwas schiefgeh
             pass
 
     def relapse_keys(self):

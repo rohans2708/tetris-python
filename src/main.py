@@ -23,16 +23,44 @@ def gameLoop(name, target_level, mainBoard):
     mainBoard.setPlayerName(name)
 
     xChange = 0
-
     gameExit = False
+    confirm_quit = False  # nur EINMAL setzen
 
-    while not gameExit:  # Stay in this loop unless the game is quit
-
+    while not gameExit:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:  # Looks for quitting event in every iteration (Meaning closing the game window)
-                gameExit = True
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
-            if event.type == pygame.KEYDOWN:  # Keyboard keys press events
+            if event.type == pygame.KEYDOWN:  # <-- erst hier ist event.key sicher vorhanden
+                # === ESC: Beenden bestätigen ===
+                if event.key == pygame.K_ESCAPE:
+                    # Bildschirm für Bestätigung anzeigen
+                    gameDisplay.fill(BLACK)
+                    font = pygame.font.Font(None, 50)
+                    text1 = font.render("Close Game? (Y/N)", True, WHITE)
+                    rect1 = text1.get_rect(center=(DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2))
+                    gameDisplay.blit(text1, rect1)
+                    pygame.display.flip()
+
+                    # Warten bis Y oder N gedrückt wird (blockierend)
+                    waiting = True
+                    while waiting:
+                        for ev in pygame.event.get():
+                            if ev.type == pygame.QUIT:
+                                pygame.quit()
+                                sys.exit()
+                            if ev.type == pygame.KEYDOWN:
+                                if ev.key == pygame.K_y:
+                                    pygame.quit()
+                                    sys.exit()
+                                elif ev.key == pygame.K_n:
+                                    key.pause.trig = True
+                                    waiting = False  # zurück ins Spiel
+                        # optional: kleine Pause, damit CPU nicht 100% läuft
+                        pygame.time.wait(10)
+
+                # === dein restlicher KEYDOWN-Code ===
                 if event.key == pygame.K_LEFT:
                     xChange += -1
                 if event.key == pygame.K_RIGHT:
@@ -70,7 +98,7 @@ def gameLoop(name, target_level, mainBoard):
                         key.hold.trig = True
                         key.hold.status = 'pressed'
 
-            if event.type == pygame.KEYUP:  # Keyboard keys release events
+            elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     xChange += 1
                 if event.key == pygame.K_RIGHT:
@@ -94,12 +122,15 @@ def gameLoop(name, target_level, mainBoard):
                 if event.key == pygame.K_h:
                     key.hold.status = 'idle'
 
-            if xChange > 0:
-                key.xNav.status = 'right'
-            elif xChange < 0:
-                key.xNav.status = 'left'
-            else:
-                key.xNav.status = 'idle'
+        # Navigation-Status updaten (außerhalb des Event-Loops ist okay)
+        if xChange > 0:
+            key.xNav.status = 'right'
+        elif xChange < 0:
+            key.xNav.status = 'left'
+        else:
+            key.xNav.status = 'idle'
+
+        # ... Rest deines gameLoop bleibt unverändert ...
 
         gameDisplay.fill(BLACK)  # Whole screen is painted black in every iteration before any other drawings occur
 
@@ -468,6 +499,7 @@ if __name__ == '__main__':
     finally:
         # Highscores sichern und Spiel beenden
         # write the upgrades in the dataframe SCORES
+        print("Saving scores and upgrades...")
         save_upgrades(name, upgrades_data)
         SCORES.to_csv(HIGHSCORES_FILE, index=False, header=True)
         pygame.quit()
