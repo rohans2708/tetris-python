@@ -1,0 +1,507 @@
+{
+  "players": {
+    "\u001b": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "Alex": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 1.0,
+        "preview_plus": 1.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.3,
+        "smoother_gravity": 1.0
+      }
+    },
+    "Lily": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 2.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 1.0,
+        "preview_plus": 1.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.5,
+        "smoother_gravity": 0.0
+      }
+    },
+    "Max": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 1.0,
+        "preview_plus": 1.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "Sarah Test": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 3.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "Thorben": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 1.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 1.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.3,
+        "smoother_gravity": 0.0
+      }
+    },
+    "a": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "as": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "asdf": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "dfg": {
+      "meta": {
+        "meta_currency": 0
+      },
+      "unlocked": {
+        "ghost_piece": 0,
+        "hard_drop": 0,
+        "hold_unlocked": 0,
+        "preview_plus": 0,
+        "rotation_buffer": 0,
+        "score_multiplier": 1,
+        "smoother_gravity": 0
+      }
+    },
+    "e": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "h": {
+      "meta": {
+        "meta_currency": 0
+      },
+      "unlocked": {
+        "ghost_piece": 0,
+        "hard_drop": 1,
+        "hold_unlocked": 1,
+        "preview_plus": 1,
+        "rotation_buffer": 0,
+        "score_multiplier": 1,
+        "smoother_gravity": 0
+      }
+    },
+    "kjhgfd": {
+      "meta": {
+        "meta_currency": 0
+      },
+      "unlocked": {
+        "ghost_piece": 0,
+        "hard_drop": 0,
+        "hold_unlocked": 0,
+        "preview_plus": 0,
+        "rotation_buffer": 0,
+        "score_multiplier": 1,
+        "smoother_gravity": 0
+      }
+    },
+    "l": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "lpasd": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "max": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "okk": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "p": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "pl\u001b": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "play": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "playt": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "playtest": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 3.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 1.0,
+        "preview_plus": 1.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 3.0,
+        "smoother_gravity": 4.0
+      }
+    },
+    "q": {
+      "meta": {
+        "meta_currency": 0
+      },
+      "unlocked": {
+        "bomb_block": 0,
+        "bomb_unlocked": 0,
+        "ghost_piece": 0,
+        "hard_drop": 0,
+        "hold_unlocked": 0,
+        "preview_plus": 0,
+        "rotation_buffer": 0,
+        "score_multiplier": 1,
+        "smoother_gravity": 0
+      }
+    },
+    "r": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "robin": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 69.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 1.0,
+        "preview_plus": 2.0,
+        "rotation_buffer": 1.0,
+        "score_multiplier": 3.0,
+        "smoother_gravity": 35.0
+      }
+    },
+    "robni": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "s": {
+      "meta": {
+        "meta_currency": 0
+      },
+      "unlocked": {
+        "bomb_block": 0,
+        "bomb_unlocked": 0,
+        "ghost_piece": 0,
+        "hard_drop": 0,
+        "hold_unlocked": 0,
+        "preview_plus": 0,
+        "rotation_buffer": 0,
+        "score_multiplier": 1,
+        "smoother_gravity": 0
+      }
+    },
+    "schnitzel": {
+      "meta": {
+        "meta_currency": 0
+      },
+      "unlocked": {
+        "bomb_block": 1,
+        "ghost_piece": 1,
+        "hard_drop": 1,
+        "hold_unlocked": 0,
+        "preview_plus": 0,
+        "rotation_buffer": 0,
+        "score_multiplier": 5,
+        "smoother_gravity": 0
+      }
+    },
+    "test": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 2.0,
+        "bomb_unlocked": 1.0,
+        "ghost_piece": 1.0,
+        "hard_drop": 1.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.5000000000000002,
+        "smoother_gravity": 10.0
+      }
+    },
+    "tester1": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    },
+    "x": {
+      "meta": {
+        "meta_currency": 0
+      },
+      "unlocked": {
+        "ghost_piece": 0,
+        "hard_drop": 0,
+        "hold_unlocked": 0,
+        "preview_plus": 0,
+        "rotation_buffer": 0,
+        "score_multiplier": 1,
+        "smoother_gravity": 0
+      }
+    },
+    "y": {
+      "meta": {
+        "meta_currency": 0.0
+      },
+      "unlocked": {
+        "bomb_block": 0.0,
+        "bomb_unlocked": 0.0,
+        "ghost_piece": 0.0,
+        "hard_drop": 0.0,
+        "hold_unlocked": 0.0,
+        "preview_plus": 0.0,
+        "rotation_buffer": 0.0,
+        "score_multiplier": 1.0,
+        "smoother_gravity": 0.0
+      }
+    }
+  }
+}
