@@ -1,6 +1,4 @@
-# Tetris Game, written in Python 3.6.5
-# Version: 1.0
-# Date: 26.05.2018
+# Tetris Game, written in Python 3.9
 import sys
 from config import *
 from challenge_explainations import *
@@ -13,9 +11,9 @@ import os
 import random
 import pygame
 
-from src.challenge_rotation_limit import Challenge_Rotation_Limit
-from src.challenge_rising_flood import Challenge_Rising_Flood
-from src.upgrades import load_upgrades, save_upgrades
+from challenge_rotation_limit import Challenge_Rotation_Limit
+from challenge_rising_flood import Challenge_Rising_Flood
+from upgrades import load_upgrades, save_upgrades
 
 
 def gameLoop(name, target_level, mainBoard):
@@ -363,6 +361,7 @@ if __name__ == '__main__':
         upgrades_data = load_upgrades(name)
 
         while True:
+            # adapt your starting level here
             current_board = MainBoard(STARTING_LEVEL, score= calc_score_for_level(0), upgrades=upgrades_data)
             if normal_game(target_level=3, current_board=current_board, name=name):
                 continue

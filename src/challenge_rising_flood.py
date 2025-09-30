@@ -3,8 +3,8 @@ from __future__ import annotations
 import math
 
 from MainBoard import MainBoard
-from src.config import fontSB, TEXT_COLOR, NUM_COLOR, LEVEL_SCORE, LEVEL_SCORE_MULTIPLIER
-from src.shared import gameDisplay, rng
+from config import fontSB, TEXT_COLOR, NUM_COLOR, LEVEL_SCORE, LEVEL_SCORE_MULTIPLIER
+from shared import gameDisplay, rng
 
 
 class Challenge_Rising_Flood(MainBoard):

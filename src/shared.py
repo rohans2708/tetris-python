@@ -17,8 +17,8 @@ piece_landed_sound = pygame.mixer.Sound("music/retro-hurt-1-236672.mp3")
 level_up_sound.set_volume(0.8)
 #tetris_sound.set_volume(10)
 
-gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT), pygame.FULLSCREEN)
-# gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT))
+#gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT), pygame.FULLSCREEN)
+gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT))
 gameClock = GameClock()
 key = GameKeyInput()
 

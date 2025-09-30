@@ -1,6 +1,6 @@
 from MainBoard import MainBoard
-from src.config import *
-from src.shared import gameDisplay, SCORES
+from config import *
+from shared import gameDisplay, SCORES
 
 
 class Challenge_No_Rows(MainBoard):

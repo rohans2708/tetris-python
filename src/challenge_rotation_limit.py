@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from MainBoard import MainBoard
-from src.config import fontSB, TEXT_COLOR, NUM_COLOR
-from src.shared import gameDisplay
+from config import fontSB, TEXT_COLOR, NUM_COLOR
+from shared import gameDisplay
 
 
 class Challenge_Rotation_Limit(MainBoard):
